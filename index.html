@@ -494,7 +494,7 @@ const KEY="liftfuel.v2";
 const OLD_KEY="liftfuel.v1";
 const emptyMealWeek=()=>DAYS.map(()=>({b:null,l:null,s1:null,s2:null}));
 const emptyTrainWeek=()=>DAYS.map(()=>null);
-const defaultSettings=()=>({age:null,h:null,w:null,act:1.375,def:250,dinner:600,ppk:1.6});
+const defaultSettings=()=>({kcal:null,age:null,h:null,w:null,act:1.375,def:250,dinner:null,ppk:1.6});
 let state={
   weeks:1, week:0,
   meals:[emptyMealWeek()],
@@ -527,7 +527,7 @@ function load(){
       state.week=Math.min(Math.max(0,d.week|0),n-1);
       if(d.settings&&typeof d.settings==="object"){
         const s=defaultSettings();
-        for(const k of["age","h","w","act","def","dinner","ppk"]){
+        for(const k of["kcal","age","h","w","act","def","dinner","ppk"]){
           const v=+d.settings[k];
           if(isFinite(v)&&(v>0||k==="def"))s[k]=v;
         }
@@ -553,16 +553,23 @@ function save(){
     settings:state.settings,tab:state.tab
   }));}catch(e){}
 }
-/* Calorie & protein targets — Mifflin-St Jeor (female), per the plan's approach */
+/* Calorie & protein targets.
+   Daily target: her own kcal number if set, else Mifflin-St Jeor (female) minus the goal deficit.
+   Dinner reserve: her own number if set, else ~35% of the daily target. */
 function calcs(){
   const s=state.settings;
-  if(!s||!(s.age>0&&s.h>0&&s.w>0))return null;
-  const bmr=10*s.w+6.25*s.h-5*s.age-161;
-  const maint=Math.round(bmr*s.act);
-  const target=Math.round(maint-s.def);
-  const protein=Math.round(s.w*s.ppk);
-  const budget=Math.max(0,target-s.dinner);
-  return {maint,target,protein,budget};
+  if(!s)return null;
+  let maint=null;
+  if(s.age>0&&s.h>0&&s.w>0)maint=Math.round((10*s.w+6.25*s.h-5*s.age-161)*s.act);
+  let target=null,manual=false;
+  if(s.kcal>0){target=Math.round(s.kcal);manual=true;}
+  else if(maint)target=Math.round(maint-s.def);
+  if(!target)return null;
+  const protein=s.w>0?Math.round(s.w*s.ppk):null;
+  const dinnerAuto=Math.round(target*0.35/50)*50;
+  const dinner=s.dinner>0?Math.round(s.dinner):dinnerAuto;
+  const budget=Math.max(0,target-dinner);
+  return {maint,target,protein,dinner,dinnerAuto,budget,manual};
 }
 
 /* ---------------- helpers ---------------- */
@@ -697,11 +704,11 @@ function renderFuel(){
   });
   const strip=c
     ?`<div class="targets">
-        <div class="tstat"><b>~${c.target.toLocaleString()}</b><span>kcal / day target</span></div>
-        <div class="tstat"><b>~${c.protein} g</b><span>protein / day</span></div>
+        <div class="tstat"><b>${c.manual?"":"~"}${c.target.toLocaleString()}</b><span>kcal / day ${c.manual?"(set)":"target"}</span></div>
+        <div class="tstat"><b>${c.protein?`~${c.protein} g`:"—"}</b><span>protein / day</span></div>
         <div class="tstat"><b>~${c.budget.toLocaleString()}</b><span>kcal for these meals</span></div>
       </div>`
-    :`<button class="hint" id="goto-set">Add age, height &amp; weight in <b>Settings</b> → the app will set daily calorie and protein targets, and build meal plans to fit them.</button>`;
+    :`<button class="hint" id="goto-set">Set a daily calorie target in <b>Settings</b> (or add age, height &amp; weight and it's calculated) → meal plans get built to fit it.</button>`;
   const lib=(title,items)=>`<details class="lib"><summary>
       <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
       ${title}<span class="cnt">${items.length} options</span></summary>
@@ -948,13 +955,15 @@ function renderGuide(){
 /* ---------------- settings view ---------------- */
 function calcOutHTML(){
   const c=calcs();
-  if(!c)return `<p class="setnote">Fill in age, height and weight above and the targets appear here.</p>`;
-  return `<div class="targets">
-      <div class="tstat"><b>~${c.maint.toLocaleString()}</b><span>kcal maintenance (est.)</span></div>
-      <div class="tstat"><b>~${c.target.toLocaleString()}</b><span>kcal / day target</span></div>
-      <div class="tstat"><b>~${c.protein} g</b><span>protein / day</span></div>
-    </div>
-    <p class="setnote">That leaves <b>~${c.budget.toLocaleString()} kcal</b> for breakfast, lunch and snacks after the dinner reserve — “Build week” on the Meals tab now picks days to fit it.</p>`;
+  if(!c)return `<p class="setnote">Set a daily calorie target above — or fill in age, height and weight and it'll be calculated — and the targets appear here.</p>`;
+  const tiles=[];
+  if(c.maint)tiles.push(`<div class="tstat"><b>~${c.maint.toLocaleString()}</b><span>kcal maintenance (est.)</span></div>`);
+  tiles.push(`<div class="tstat"><b>${c.manual?"":"~"}${c.target.toLocaleString()}</b><span>kcal / day ${c.manual?"(your setting)":"target"}</span></div>`);
+  if(c.protein)tiles.push(`<div class="tstat"><b>~${c.protein} g</b><span>protein / day</span></div>`);
+  return `<div class="targets" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.join("")}</div>
+    <p class="setnote">Dinner reserve: <b>~${c.dinner.toLocaleString()} kcal</b>${state.settings.dinner>0?" (your setting)":" (auto — 35% of the daily target)"} → leaving <b>~${c.budget.toLocaleString()} kcal</b> for breakfast, lunch and snacks. “Build week” on the Meals tab picks days to fit that.</p>
+    ${c.manual&&c.maint?`<p class="setnote">For reference, estimated maintenance from her details is ~${c.maint.toLocaleString()} kcal — a target of ${c.target.toLocaleString()} is ${c.target<c.maint?`~${(c.maint-c.target).toLocaleString()} kcal below it${c.maint-c.target>500?" — that's a big deficit; the plan recommends 200–350":""}`:"at or above it"}.</p>`:""}
+    ${!c.protein?`<p class="setnote">Add her weight and you'll get a protein target too.</p>`:""}`;
 }
 function renderSettings(){
   const v=document.getElementById("view-set");
@@ -965,6 +974,8 @@ function renderSettings(){
     <h2 class="section">Settings</h2>
     <p class="section-sub">Everything stays on this phone — nothing is sent anywhere.</p>
     <div class="form">
+      <div class="field"><label for="s-kcal">Daily calorie target <span class="unit">kcal — leave blank to calculate it from the details below</span></label>
+        <input id="s-kcal" type="number" inputmode="numeric" min="1000" max="4000" step="50" value="${val(s.kcal)}" placeholder="auto"></div>
       <div class="fgrid">
         <div class="field"><label for="s-age">Age <span class="unit">years</span></label>
           <input id="s-age" type="number" inputmode="numeric" min="18" max="90" value="${val(s.age)}"></div>
@@ -973,7 +984,7 @@ function renderSettings(){
         <div class="field"><label for="s-w">Weight <span class="unit">kg</span></label>
           <input id="s-w" type="number" inputmode="decimal" min="35" max="200" step="0.5" value="${val(s.w)}"></div>
         <div class="field"><label for="s-dinner">Dinner reserve <span class="unit">kcal</span></label>
-          <input id="s-dinner" type="number" inputmode="numeric" min="300" max="1200" step="50" value="${val(s.dinner)}"></div>
+          <input id="s-dinner" type="number" inputmode="numeric" min="300" max="1500" step="50" value="${val(s.dinner)}" placeholder="${(()=>{const c=calcs();return c?"auto ~"+c.dinnerAuto:"auto ~35%";})()}"></div>
       </div>
       <div class="field"><label for="s-act">Activity outside training</label>
         <select id="s-act">
@@ -1002,16 +1013,19 @@ function renderSettings(){
   const num=id=>{const n=parseFloat(document.getElementById(id).value);return isFinite(n)&&n>0?n:null;};
   const update=()=>{
     state.settings={
+      kcal:num("s-kcal"),
       age:num("s-age"),h:num("s-h"),w:num("s-w"),
-      dinner:num("s-dinner")||600,
+      dinner:num("s-dinner"),
       act:parseFloat(document.getElementById("s-act").value),
       def:parseFloat(document.getElementById("s-def").value)||0,
       ppk:parseFloat(document.getElementById("s-ppk").value),
     };
     save();
     document.getElementById("calc-out").innerHTML=calcOutHTML();
+    const c=calcs();
+    document.getElementById("s-dinner").placeholder=c?"auto ~"+c.dinnerAuto:"auto ~35%";
   };
-  for(const id of["s-age","s-h","s-w","s-dinner"])document.getElementById(id).oninput=update;
+  for(const id of["s-kcal","s-age","s-h","s-w","s-dinner"])document.getElementById(id).oninput=update;
   for(const id of["s-act","s-def","s-ppk"])document.getElementById(id).onchange=update;
 }
 
