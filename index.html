@@ -314,6 +314,10 @@ details.lib[open]>summary .caret{transform:rotate(90deg)}
   padding:11px 12px;font:500 16px "Figtree",sans-serif;min-height:46px;
 }
 .field input:focus,.field select:focus{outline:2.5px solid var(--run);outline-offset:1px;border-color:transparent}
+.field select{
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23808A84' stroke-width='2' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:38px;
+}
 .field .unit{font-size:12px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
 .setnote{color:var(--muted);font-size:12.5px;margin:12px 2px;line-height:1.55}
 </style>
@@ -495,6 +499,8 @@ const OLD_KEY="liftfuel.v1";
 const emptyMealWeek=()=>DAYS.map(()=>({b:null,l:null,s1:null,s2:null}));
 const emptyTrainWeek=()=>DAYS.map(()=>null);
 const defaultSettings=()=>({kcal:null,age:null,h:null,w:null,act:1.375,def:250,dinner:null,ppk:1.6});
+/* plausible input ranges — outside these a value is treated as not entered */
+const NUM_LIMITS={kcal:[800,4500],age:[16,95],h:[100,230],w:[30,250],dinner:[200,2000]};
 let state={
   weeks:1, week:0,
   meals:[emptyMealWeek()],
@@ -527,10 +533,14 @@ function load(){
       state.week=Math.min(Math.max(0,d.week|0),n-1);
       if(d.settings&&typeof d.settings==="object"){
         const s=defaultSettings();
-        for(const k of["kcal","age","h","w","act","def","dinner","ppk"]){
-          const v=+d.settings[k];
-          if(isFinite(v)&&(v>0||k==="def"))s[k]=v;
+        for(const k in NUM_LIMITS){
+          const v=+d.settings[k],[lo,hi]=NUM_LIMITS[k];
+          if(isFinite(v)&&v>=lo&&v<=hi)s[k]=v;
         }
+        const snap=(v,list,fb)=>list.includes(+v)?+v:fb;
+        s.act=snap(d.settings.act,[1.2,1.375,1.55,1.725],s.act);
+        s.def=snap(d.settings.def,[0,250,350],s.def);
+        s.ppk=snap(d.settings.ppk,[1.4,1.6,1.8,2.0],s.ppk);
         state.settings=s;
       }
       if(["fuel","train","guide","set"].includes(d.tab))state.tab=d.tab;
@@ -585,7 +595,7 @@ function weekbarHTML(prefix){
     pills+=`<button class="wpill ${w===state.week?"active":""}" data-w="${w}">Week ${w+1}</button>`;
   }
   if(state.weeks<MAX_WEEKS)pills+=`<button class="wpill add" id="${prefix}-addweek">+ Add week</button>`;
-  return `<div class="weekbar" role="tablist" aria-label="Weeks">${pills}</div>`;
+  return `<div class="weekbar" role="group" aria-label="Weeks">${pills}</div>`;
 }
 function bindWeekbar(view,prefix){
   view.querySelectorAll(".wpill[data-w]").forEach(el=>{
@@ -631,9 +641,10 @@ function randomMealWeek(){
     const cands=[];
     for(let a=0;a<SNACKS.length;a++)for(let b=a+1;b<SNACKS.length;b++){
       cands.push({s1:SNACKS[a].id,s2:SNACKS[b].id,key:SNACKS[a].id+"|"+SNACKS[b].id,
-        diff:Math.abs(SNACKS[a].k+SNACKS[b].k-want)});
+        diff:Math.abs(SNACKS[a].k+SNACKS[b].k-want),pp:SNACKS[a].p+SNACKS[b].p});
     }
-    cands.sort((x,y)=>x.diff-y.diff);
+    // closest to budget first; among near-equal fits, prefer more protein
+    cands.sort((x,y)=>(x.diff-y.diff)||(y.pp-x.pp));
     const top=cands.slice(0,6).filter(p=>p.key!==lastKey);
     const pick=top[Math.floor(Math.random()*top.length)]||cands[0];
     lastKey=pick.key;
@@ -684,14 +695,16 @@ function renderFuel(){
     let dinner="";
     if(c&&t.n){
       const left=c.target-t.k;
+      const gap=4-t.n;
+      const extra=gap?` — ${gap} slot${gap>1?"s":""} still empty`:"";
       dinner=left>0
-        ?`<div class="dinnerline ${left<400?"tight":""}">Leaves ~${left.toLocaleString()} kcal for dinner${left<400?" — a light one":""}</div>`
-        :`<div class="dinnerline tight">~${Math.abs(left).toLocaleString()} kcal over the daily target before dinner</div>`;
+        ?`<div class="dinnerline ${!gap&&left<400?"tight":""}">Leaves ~${left.toLocaleString()} kcal for dinner${!gap&&left<400?" — a light one":""}${extra}</div>`
+        :`<div class="dinnerline tight">~${Math.abs(left).toLocaleString()} kcal over the daily target before dinner${extra}</div>`;
     }
     cards+=`<article class="day ${i===todayIdx?"today":""}">
       <div class="dayhead">
         <span class="dayname">${day}${i===todayIdx?'<span class="todaytag">Today</span>':""}</span>
-        <span class="daytotal">${t.n?`<b>~${t.p} g</b> protein · ~${t.k} kcal`:"—"}</span>
+        <span class="daytotal">${t.n?`<b>~${t.p} g</b> protein · ~${t.k.toLocaleString()} kcal`:"—"}</span>
       </div>
       <div class="slots">
         ${mealSlotRow(i,"b","Breakfast")}
@@ -962,8 +975,9 @@ function calcOutHTML(){
   if(c.protein)tiles.push(`<div class="tstat"><b>~${c.protein} g</b><span>protein / day</span></div>`);
   return `<div class="targets" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.join("")}</div>
     <p class="setnote">Dinner reserve: <b>~${c.dinner.toLocaleString()} kcal</b>${state.settings.dinner>0?" (your setting)":" (auto — 35% of the daily target)"} → leaving <b>~${c.budget.toLocaleString()} kcal</b> for breakfast, lunch and snacks. “Build week” on the Meals tab picks days to fit that.</p>
-    ${c.manual&&c.maint?`<p class="setnote">For reference, estimated maintenance from her details is ~${c.maint.toLocaleString()} kcal — a target of ${c.target.toLocaleString()} is ${c.target<c.maint?`~${(c.maint-c.target).toLocaleString()} kcal below it${c.maint-c.target>500?" — that's a big deficit; the plan recommends 200–350":""}`:"at or above it"}.</p>`:""}
-    ${!c.protein?`<p class="setnote">Add her weight and you'll get a protein target too.</p>`:""}`;
+    ${c.budget<970?`<p class="setnote" style="color:var(--amber)">The lightest possible day here (smallest breakfast + lunch + 2 snacks) is ~970 kcal, so a ~${c.budget.toLocaleString()} kcal budget will always show days as over. Lower the dinner reserve or raise the daily target.</p>`:""}
+    ${c.manual&&c.maint?`<p class="setnote">For reference, estimated maintenance from your details is ~${c.maint.toLocaleString()} kcal — a target of ${c.target.toLocaleString()} is ${c.target<c.maint?`~${(c.maint-c.target).toLocaleString()} kcal below it${c.maint-c.target>500?" — that's a big deficit; the plan recommends 200–350":""}`:"at or above it"}.</p>`:""}
+    ${!c.protein?`<p class="setnote">Add your weight and you'll get a protein target too.</p>`:""}`;
 }
 function renderSettings(){
   const v=document.getElementById("view-set");
@@ -1010,12 +1024,15 @@ function renderSettings(){
     <div id="calc-out">${calcOutHTML()}</div>
     <p class="setnote">Estimates only (Mifflin-St Jeor, women's formula). The real test is the 2–3-week trend: fat loss faster than ~0.7% of bodyweight a week, or energy/sleep dropping → eat more. Stalled 2–3 weeks with good adherence → trim ~150 kcal or add ~1,500 steps first. Deficits stay small on purpose — big ones cost muscle and healing.</p>
   `;
-  const num=id=>{const n=parseFloat(document.getElementById(id).value);return isFinite(n)&&n>0?n:null;};
+  const num=(id,k)=>{
+    const n=parseFloat(document.getElementById(id).value),[lo,hi]=NUM_LIMITS[k];
+    return isFinite(n)&&n>=lo&&n<=hi?n:null;
+  };
   const update=()=>{
     state.settings={
-      kcal:num("s-kcal"),
-      age:num("s-age"),h:num("s-h"),w:num("s-w"),
-      dinner:num("s-dinner"),
+      kcal:num("s-kcal","kcal"),
+      age:num("s-age","age"),h:num("s-h","h"),w:num("s-w","w"),
+      dinner:num("s-dinner","dinner"),
       act:parseFloat(document.getElementById("s-act").value),
       def:parseFloat(document.getElementById("s-def").value)||0,
       ppk:parseFloat(document.getElementById("s-ppk").value),
@@ -1030,6 +1047,7 @@ function renderSettings(){
 }
 
 /* ---------------- sheet ---------------- */
+function lockScroll(on){document.documentElement.style.overflow=on?"hidden":"";}
 function openSheet(title,items,onPick,showClear,onClear){
   const root=document.getElementById("sheet-root");
   root.innerHTML=`<div class="sheet-backdrop" id="sb">
@@ -1045,7 +1063,8 @@ function openSheet(title,items,onPick,showClear,onClear){
         ${showClear?`<div class="optrow"><button class="opt clear" data-id=""><span class="n">Clear this slot</span></button></div>`:""}
       </div>
     </div></div>`;
-  const close=()=>{root.innerHTML="";document.removeEventListener("keydown",onKey);};
+  lockScroll(true);
+  const close=()=>{root.innerHTML="";lockScroll(false);document.removeEventListener("keydown",onKey);};
   const onKey=e=>{if(e.key==="Escape")close();};
   document.addEventListener("keydown",onKey);
   const bd=document.getElementById("sb");
@@ -1072,7 +1091,8 @@ function askConfirm(msg,yesLabel,onYes){
         <button class="btn" id="c-yes">${esc(yesLabel)}</button>
       </div>
     </div></div>`;
-  const close=()=>{root.innerHTML="";document.removeEventListener("keydown",onKey);};
+  lockScroll(true);
+  const close=()=>{root.innerHTML="";lockScroll(false);document.removeEventListener("keydown",onKey);};
   const onKey=e=>{if(e.key==="Escape")close();};
   document.addEventListener("keydown",onKey);
   const bd=document.getElementById("cb");
