@@ -276,6 +276,46 @@ details.lib[open]>summary .caret{transform:rotate(90deg)}
 .confirmrow{display:flex;gap:10px;padding:0 16px 18px}
 .confirmrow .btn{flex:1}
 .weeknote{color:var(--muted);font-size:13px;margin:14px 2px 0;line-height:1.5}
+/* targets strip + dinner line */
+.targets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 0}
+.tstat{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:10px 8px;text-align:center;box-shadow:var(--shadow);
+}
+.tstat b{
+  display:block;font-family:"Bricolage Grotesque","Figtree",sans-serif;
+  font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;
+}
+.tstat span{font-size:11px;color:var(--muted);line-height:1.3;display:block;margin-top:2px}
+.hint{
+  appearance:none;width:100%;text-align:left;cursor:pointer;font:500 13.5px/1.5 "Figtree",sans-serif;
+  background:var(--pine-tint);color:var(--pine-ink);border:1px solid var(--pine);
+  border-radius:12px;padding:11px 14px;margin:14px 0 0;
+}
+.dinnerline{
+  border-top:1px solid var(--line);padding:8px 14px;font-size:12.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.dinnerline.tight{color:var(--amber);font-weight:600}
+/* settings form */
+.form{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:16px 14px 6px;margin:14px 0;
+}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.field{margin:0 0 14px}
+.field label{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 5px;
+}
+.field input,.field select{
+  width:100%;appearance:none;background:var(--card2);color:var(--ink);
+  border:1.5px solid var(--line-strong);border-radius:10px;
+  padding:11px 12px;font:500 16px "Figtree",sans-serif;min-height:46px;
+}
+.field input:focus,.field select:focus{outline:2.5px solid var(--run);outline-offset:1px;border-color:transparent}
+.field .unit{font-size:12px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
+.setnote{color:var(--muted);font-size:12.5px;margin:12px 2px;line-height:1.55}
 </style>
 </head>
 <body>
@@ -288,6 +328,7 @@ details.lib[open]>summary .caret{transform:rotate(90deg)}
   <section id="view-fuel"></section>
   <section id="view-train" hidden></section>
   <section id="view-guide" hidden></section>
+  <section id="view-set" hidden></section>
 </div>
 
 <nav class="tabbar" aria-label="Sections">
@@ -303,6 +344,10 @@ details.lib[open]>summary .caret{transform:rotate(90deg)}
     <button id="tab-guide" aria-controls="view-guide">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5C10.5 4 8.5 3.5 6 3.5c-1 0-2 .15-3 .5v15c1-.35 2-.5 3-.5 2.5 0 4.5.5 6 2 1.5-1.5 3.5-2 6-2 1 0 2 .15 3 .5v-15c-1-.35-2-.5-3-.5-2.5 0-4.5.5-6 2Z"/><path d="M12 5.5v15"/></svg>
       Guide
+    </button>
+    <button id="tab-set" aria-controls="view-set">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="var(--bg)"/><circle cx="15" cy="12" r="2.2" fill="var(--bg)"/><circle cx="8" cy="17" r="2.2" fill="var(--bg)"/></svg>
+      Settings
     </button>
   </div>
 </nav>
@@ -449,10 +494,12 @@ const KEY="liftfuel.v2";
 const OLD_KEY="liftfuel.v1";
 const emptyMealWeek=()=>DAYS.map(()=>({b:null,l:null,s1:null,s2:null}));
 const emptyTrainWeek=()=>DAYS.map(()=>null);
+const defaultSettings=()=>({age:null,h:null,w:null,act:1.375,def:250,dinner:600,ppk:1.6});
 let state={
   weeks:1, week:0,
   meals:[emptyMealWeek()],
   training:[emptyTrainWeek()],
+  settings:defaultSettings(),
   tab:"fuel",
 };
 let expandedTrain=null; // day index with detail open (current week)
@@ -478,7 +525,15 @@ function load(){
       state.meals=Array.from({length:n},(_,w)=>cleanMealWeek(d.meals&&d.meals[w]));
       state.training=Array.from({length:n},(_,w)=>cleanTrainWeek(d.training&&d.training[w]));
       state.week=Math.min(Math.max(0,d.week|0),n-1);
-      if(["fuel","train","guide"].includes(d.tab))state.tab=d.tab;
+      if(d.settings&&typeof d.settings==="object"){
+        const s=defaultSettings();
+        for(const k of["age","h","w","act","def","dinner","ppk"]){
+          const v=+d.settings[k];
+          if(isFinite(v)&&(v>0||k==="def"))s[k]=v;
+        }
+        state.settings=s;
+      }
+      if(["fuel","train","guide","set"].includes(d.tab))state.tab=d.tab;
       return;
     }
     raw=localStorage.getItem(OLD_KEY);
@@ -494,8 +549,20 @@ function load(){
 }
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify({
-    weeks:state.weeks,week:state.week,meals:state.meals,training:state.training,tab:state.tab
+    weeks:state.weeks,week:state.week,meals:state.meals,training:state.training,
+    settings:state.settings,tab:state.tab
   }));}catch(e){}
+}
+/* Calorie & protein targets — Mifflin-St Jeor (female), per the plan's approach */
+function calcs(){
+  const s=state.settings;
+  if(!s||!(s.age>0&&s.h>0&&s.w>0))return null;
+  const bmr=10*s.w+6.25*s.h-5*s.age-161;
+  const maint=Math.round(bmr*s.act);
+  const target=Math.round(maint-s.def);
+  const protein=Math.round(s.w*s.ppk);
+  const budget=Math.max(0,target-s.dinner);
+  return {maint,target,protein,budget};
 }
 
 /* ---------------- helpers ---------------- */
@@ -538,13 +605,32 @@ function removeCurrentWeek(){
 
 /* ---------------- meals view ---------------- */
 function randomMealWeek(){
+  const c=calcs();
   const bs=shuffle(BREAKFASTS).map(x=>x.id);
   const ls=shuffle(LUNCHES).map(x=>x.id).slice(0,7);
-  let pool=shuffle(SNACKS).concat(shuffle(SNACKS)).map(x=>x.id);
+  if(!c){ // no settings yet — plain variety shuffle
+    let pool=shuffle(SNACKS).concat(shuffle(SNACKS)).map(x=>x.id);
+    return DAYS.map((_,i)=>{
+      let s1=pool.shift(),s2=pool.shift();
+      if(s2===s1){const alt=pool.findIndex(x=>x!==s1);if(alt>-1){s2=pool.splice(alt,1)[0];}}
+      return {b:bs[i],l:ls[i],s1,s2};
+    });
+  }
+  // budget-aware: pick the snack pair that lands the day closest to her kcal budget
+  let lastKey=null;
   return DAYS.map((_,i)=>{
-    let s1=pool.shift(),s2=pool.shift();
-    if(s2===s1){const alt=pool.findIndex(x=>x!==s1);if(alt>-1){s2=pool.splice(alt,1)[0];}}
-    return {b:bs[i],l:ls[i],s1,s2};
+    const base=MEAL_BY_ID[bs[i]].k+MEAL_BY_ID[ls[i]].k;
+    const want=c.budget-base;
+    const cands=[];
+    for(let a=0;a<SNACKS.length;a++)for(let b=a+1;b<SNACKS.length;b++){
+      cands.push({s1:SNACKS[a].id,s2:SNACKS[b].id,key:SNACKS[a].id+"|"+SNACKS[b].id,
+        diff:Math.abs(SNACKS[a].k+SNACKS[b].k-want)});
+    }
+    cands.sort((x,y)=>x.diff-y.diff);
+    const top=cands.slice(0,6).filter(p=>p.key!==lastKey);
+    const pick=top[Math.floor(Math.random()*top.length)]||cands[0];
+    lastKey=pick.key;
+    return {b:bs[i],l:ls[i],s1:pick.s1,s2:pick.s2};
   });
 }
 const mealWeekHasPicks=w=>state.meals[w].some(d=>d.b||d.l||d.s1||d.s2);
@@ -584,9 +670,17 @@ function mealSlotRow(di,key,label){
 }
 function renderFuel(){
   const v=document.getElementById("view-fuel");
+  const c=calcs();
   let cards="";
   DAYS.forEach((day,i)=>{
     const t=dayTotals(state.meals[state.week][i]);
+    let dinner="";
+    if(c&&t.n){
+      const left=c.target-t.k;
+      dinner=left>0
+        ?`<div class="dinnerline ${left<400?"tight":""}">Leaves ~${left.toLocaleString()} kcal for dinner${left<400?" — a light one":""}</div>`
+        :`<div class="dinnerline tight">~${Math.abs(left).toLocaleString()} kcal over the daily target before dinner</div>`;
+    }
     cards+=`<article class="day ${i===todayIdx?"today":""}">
       <div class="dayhead">
         <span class="dayname">${day}${i===todayIdx?'<span class="todaytag">Today</span>':""}</span>
@@ -598,8 +692,16 @@ function renderFuel(){
         ${mealSlotRow(i,"s1","Snack 1")}
         ${mealSlotRow(i,"s2","Snack 2")}
       </div>
+      ${dinner}
     </article>`;
   });
+  const strip=c
+    ?`<div class="targets">
+        <div class="tstat"><b>~${c.target.toLocaleString()}</b><span>kcal / day target</span></div>
+        <div class="tstat"><b>~${c.protein} g</b><span>protein / day</span></div>
+        <div class="tstat"><b>~${c.budget.toLocaleString()}</b><span>kcal for these meals</span></div>
+      </div>`
+    :`<button class="hint" id="goto-set">Add age, height &amp; weight in <b>Settings</b> → the app will set daily calorie and protein targets, and build meal plans to fit them.</button>`;
   const lib=(title,items)=>`<details class="lib"><summary>
       <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
       ${title}<span class="cnt">${items.length} options</span></summary>
@@ -611,6 +713,7 @@ function renderFuel(){
   v.innerHTML=`
     <h2 class="section">Meal planner</h2>
     <p class="section-sub">Breakfast, lunch and two snacks a day — each main meal lands ~30 g protein. Dinner is yours.</p>
+    ${strip}
     ${weekbarHTML("fuel")}
     <div class="actions">
       <button class="btn" id="build-meals">${mealWeekHasPicks(state.week)?"↻ Re-generate week":`Build Week ${state.week+1}`}</button>
@@ -625,6 +728,7 @@ function renderFuel(){
     ${lib("Breakfasts",BREAKFASTS)}${lib("Lunches",LUNCHES)}${lib("Snacks",SNACKS)}
   `;
   bindWeekbar(v,"fuel");
+  const gs=document.getElementById("goto-set");if(gs)gs.onclick=()=>setTab("set");
   document.getElementById("build-meals").onclick=buildMealWeek;
   const ba=document.getElementById("build-meals-all");if(ba)ba.onclick=buildAllMealWeeks;
   const cl=document.getElementById("clear-meals");if(cl)cl.onclick=clearMeals;
@@ -841,6 +945,76 @@ function renderGuide(){
   `;
 }
 
+/* ---------------- settings view ---------------- */
+function calcOutHTML(){
+  const c=calcs();
+  if(!c)return `<p class="setnote">Fill in age, height and weight above and the targets appear here.</p>`;
+  return `<div class="targets">
+      <div class="tstat"><b>~${c.maint.toLocaleString()}</b><span>kcal maintenance (est.)</span></div>
+      <div class="tstat"><b>~${c.target.toLocaleString()}</b><span>kcal / day target</span></div>
+      <div class="tstat"><b>~${c.protein} g</b><span>protein / day</span></div>
+    </div>
+    <p class="setnote">That leaves <b>~${c.budget.toLocaleString()} kcal</b> for breakfast, lunch and snacks after the dinner reserve — “Build week” on the Meals tab now picks days to fit it.</p>`;
+}
+function renderSettings(){
+  const v=document.getElementById("view-set");
+  const s=state.settings;
+  const val=x=>x==null?"":x;
+  const sel=(cur,v2)=>Math.abs(cur-v2)<1e-9?" selected":"";
+  v.innerHTML=`
+    <h2 class="section">Settings</h2>
+    <p class="section-sub">Everything stays on this phone — nothing is sent anywhere.</p>
+    <div class="form">
+      <div class="fgrid">
+        <div class="field"><label for="s-age">Age <span class="unit">years</span></label>
+          <input id="s-age" type="number" inputmode="numeric" min="18" max="90" value="${val(s.age)}"></div>
+        <div class="field"><label for="s-h">Height <span class="unit">cm</span></label>
+          <input id="s-h" type="number" inputmode="numeric" min="120" max="220" value="${val(s.h)}"></div>
+        <div class="field"><label for="s-w">Weight <span class="unit">kg</span></label>
+          <input id="s-w" type="number" inputmode="decimal" min="35" max="200" step="0.5" value="${val(s.w)}"></div>
+        <div class="field"><label for="s-dinner">Dinner reserve <span class="unit">kcal</span></label>
+          <input id="s-dinner" type="number" inputmode="numeric" min="300" max="1200" step="50" value="${val(s.dinner)}"></div>
+      </div>
+      <div class="field"><label for="s-act">Activity outside training</label>
+        <select id="s-act">
+          <option value="1.2"${sel(s.act,1.2)}>Mostly sitting</option>
+          <option value="1.375"${sel(s.act,1.375)}>Lightly active — on your feet part of the day</option>
+          <option value="1.55"${sel(s.act,1.55)}>Moderately active — busy days, ~8,500+ steps</option>
+          <option value="1.725"${sel(s.act,1.725)}>Very active — physical job or big step counts</option>
+        </select></div>
+      <div class="field"><label for="s-def">Goal</label>
+        <select id="s-def">
+          <option value="0"${sel(s.def,0)}>Maintain — no deficit</option>
+          <option value="250"${sel(s.def,250)}>Gentle recomp — ~250 kcal deficit (recommended)</option>
+          <option value="350"${sel(s.def,350)}>Steadier loss — ~350 kcal deficit</option>
+        </select></div>
+      <div class="field"><label for="s-ppk">Protein target</label>
+        <select id="s-ppk">
+          <option value="1.4"${sel(s.ppk,1.4)}>1.4 g per kg — minimum while training</option>
+          <option value="1.6"${sel(s.ppk,1.6)}>1.6 g per kg — the plan's target (recommended)</option>
+          <option value="1.8"${sel(s.ppk,1.8)}>1.8 g per kg — higher end</option>
+          <option value="2.0"${sel(s.ppk,2.0)}>2.0 g per kg — top of the range</option>
+        </select></div>
+    </div>
+    <div id="calc-out">${calcOutHTML()}</div>
+    <p class="setnote">Estimates only (Mifflin-St Jeor, women's formula). The real test is the 2–3-week trend: fat loss faster than ~0.7% of bodyweight a week, or energy/sleep dropping → eat more. Stalled 2–3 weeks with good adherence → trim ~150 kcal or add ~1,500 steps first. Deficits stay small on purpose — big ones cost muscle and healing.</p>
+  `;
+  const num=id=>{const n=parseFloat(document.getElementById(id).value);return isFinite(n)&&n>0?n:null;};
+  const update=()=>{
+    state.settings={
+      age:num("s-age"),h:num("s-h"),w:num("s-w"),
+      dinner:num("s-dinner")||600,
+      act:parseFloat(document.getElementById("s-act").value),
+      def:parseFloat(document.getElementById("s-def").value)||0,
+      ppk:parseFloat(document.getElementById("s-ppk").value),
+    };
+    save();
+    document.getElementById("calc-out").innerHTML=calcOutHTML();
+  };
+  for(const id of["s-age","s-h","s-w","s-dinner"])document.getElementById(id).oninput=update;
+  for(const id of["s-act","s-def","s-ppk"])document.getElementById(id).onchange=update;
+}
+
 /* ---------------- sheet ---------------- */
 function openSheet(title,items,onPick,showClear,onClear){
   const root=document.getElementById("sheet-root");
@@ -897,19 +1071,22 @@ function askConfirm(msg,yesLabel,onYes){
 /* ---------------- tabs ---------------- */
 function setTab(t){
   state.tab=t;save();
-  for(const id of["fuel","train","guide"]){
+  for(const id of["fuel","train","guide","set"]){
     document.getElementById("view-"+id).hidden=id!==t;
     document.getElementById("tab-"+id).classList.toggle("active",id===t);
   }
+  // re-render on entry so settings changes flow into targets/budgets
+  if(t==="fuel")renderFuel();else if(t==="train")renderTrain();else if(t==="set")renderSettings();
   window.scrollTo(0,0);
 }
 document.getElementById("tab-fuel").onclick=()=>setTab("fuel");
 document.getElementById("tab-train").onclick=()=>setTab("train");
 document.getElementById("tab-guide").onclick=()=>setTab("guide");
+document.getElementById("tab-set").onclick=()=>setTab("set");
 
 /* ---------------- init ---------------- */
 load();
-renderFuel();renderTrain();renderGuide();
+renderFuel();renderTrain();renderGuide();renderSettings();
 setTab(state.tab);
 </script>
 </body>
