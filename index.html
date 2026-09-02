@@ -130,6 +130,26 @@ h2.section{
 }
 .slotval{flex:1;font-size:14.5px;line-height:1.35}
 .slotval.empty{color:var(--muted);font-weight:500}
+.slotdetail{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.slotstats{
+  display:block;font-size:12px;font-weight:600;color:var(--berry-ink);
+  margin-top:2px;font-variant-numeric:tabular-nums;
+}
+.slotrow{display:flex;align-items:stretch;border-top:1px solid var(--line)}
+.slotrow .slot{border-top:0;flex:1;min-width:0}
+.portion{
+  appearance:none;flex:none;align-self:center;margin-right:12px;cursor:pointer;
+  border:1.5px solid var(--line-strong);border-radius:999px;background:var(--card);
+  color:var(--ink);font:700 12px "Figtree",sans-serif;padding:6px 9px;min-width:42px;min-height:32px;
+}
+.portion.scaled{background:var(--berry-tint);border-color:var(--berry);color:var(--berry-ink)}
+.addsnack{
+  appearance:none;background:none;border:0;border-top:1px solid var(--line);width:100%;
+  text-align:left;padding:10px 14px;cursor:pointer;
+  font:600 12.5px "Figtree",sans-serif;color:var(--muted);min-height:40px;
+}
+.nwrap{flex:1;display:flex;flex-direction:column;min-width:0}
+.odetail{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
 .slotmeta{
   flex:none;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;
   white-space:nowrap;text-align:right;
@@ -378,46 +398,46 @@ details.lib[open]>summary .caret{transform:rotate(90deg)}
 "use strict";
 /* ---------------- data: meals ---------------- */
 const BREAKFASTS=[
- {id:"b1",name:"Skyr or Greek yoghurt + berries + seeds + granola",p:30,k:350},
- {id:"b2",name:"Cottage cheese on wholegrain toast + 2 boiled eggs",p:32,k:400},
- {id:"b3",name:"Overnight oats with milk + scoop of protein powder",p:35,k:400},
- {id:"b4",name:"3-egg scramble or omelette with cheese",p:28,k:350},
- {id:"b5",name:"Protein smoothie — milk, protein powder, banana & peanut butter",p:35,k:400},
- {id:"b6",name:"Egg, cheese & ham breakfast wrap",p:30,k:420},
- {id:"b7",name:"RTD protein shake + boiled egg + fruit",p:35,k:350},
- {id:"b8",name:"Protein pancakes — blend oats, banana, egg + scoop of powder",p:30,k:380},
- {id:"b9",name:"Weet-Bix + milk, topped with high-protein yoghurt",p:28,k:350},
- {id:"b10",name:"Tinned salmon or tuna + avocado on toast",p:30,k:380,fish:true},
- {id:"b11",name:"Baked beans & grated cheese on toast",p:23,k:420},
+ {id:"b1",name:"Skyr or Greek yoghurt + berries + seeds + granola",p:30,k:350,d:"200 g skyr/Greek yoghurt + ½ cup berries + 2 tbsp seeds + ¼ cup granola"},
+ {id:"b2",name:"Cottage cheese on wholegrain toast + 2 boiled eggs",p:32,k:400,d:"½ cup (125 g) cottage cheese on 1 slice toast + 2 boiled eggs"},
+ {id:"b3",name:"Overnight oats with milk + scoop of protein powder",p:35,k:400,d:"½ cup oats + 1 cup milk + 1 scoop powder, fridge overnight"},
+ {id:"b4",name:"3-egg scramble or omelette with cheese",p:28,k:350,d:"3 eggs + 30 g grated cheese"},
+ {id:"b5",name:"Protein smoothie — milk, protein powder, banana & peanut butter",p:35,k:400,d:"1 cup milk + 1 scoop powder + 1 banana + 1 tbsp PB, blended"},
+ {id:"b6",name:"Egg, cheese & ham breakfast wrap",p:30,k:420,d:"1 wholegrain wrap + 2 scrambled eggs + 1 slice cheese + 2 slices ham"},
+ {id:"b7",name:"RTD protein shake + boiled egg + fruit",p:35,k:350,d:"1 bottle (~330 ml) + 1 boiled egg + 1 piece of fruit"},
+ {id:"b8",name:"Protein pancakes — blend oats, banana, egg + scoop of powder",p:30,k:380,d:"½ cup oats + 1 banana + 1 egg + 1 scoop powder → 3–4 pancakes"},
+ {id:"b9",name:"Weet-Bix + milk, topped with high-protein yoghurt",p:28,k:350,d:"2 Weet-Bix + 1 cup milk + 1 high-protein yoghurt pottle"},
+ {id:"b10",name:"Tinned salmon or tuna + avocado on toast",p:30,k:380,fish:true,d:"1 small tin (95 g) + ½ avocado on 2 slices wholegrain toast"},
+ {id:"b11",name:"Baked beans & grated cheese on toast",p:23,k:420,d:"½ can (~210 g) beans + 30 g cheese on 2 slices toast"},
 ];
 const LUNCHES=[
- {id:"l1",name:"Chicken + salad wholegrain wrap (batch-cooked or rotisserie)",p:35,k:450},
- {id:"l2",name:"Shredded chicken + brown rice or couscous + veg bowl",p:35,k:450},
- {id:"l3",name:"Big salad + chickpeas + feta + 2 boiled eggs",p:28,k:420},
- {id:"l4",name:"Cottage cheese + wholegrain crackers + boiled eggs + veg sticks",p:32,k:380},
- {id:"l5",name:"Leftover-dinner protein bowl (extra meat + salad)",p:35,k:450},
- {id:"l6",name:"Greek-yoghurt bento — yoghurt, nuts, fruit, cheese, turkey slices",p:30,k:420},
- {id:"l7",name:"Wholegrain wrap + hummus + grilled chicken + salad",p:33,k:450},
- {id:"l8",name:"Cheese & ham toastie + side salad + high-protein yoghurt",p:32,k:470},
- {id:"l9",name:"Pesto chicken pasta salad with veg",p:32,k:450},
- {id:"l10",name:"Burrito bowl — savoury mince, beans, rice, cheese & salsa",p:35,k:470},
- {id:"l11",name:"Tuna + brown rice or couscous pouch + veg",p:35,k:450,fish:true},
- {id:"l12",name:"Ham, cheese & salad sandwich + a boiled egg",p:30,k:450},
- {id:"l13",name:"Microwave jacket potato + chilli beans + cheese",p:25,k:450},
+ {id:"l1",name:"Chicken + salad wholegrain wrap (batch-cooked or rotisserie)",p:35,k:450,d:"1 wrap + 100–120 g cooked chicken + big handful of salad"},
+ {id:"l2",name:"Shredded chicken + brown rice or couscous + veg bowl",p:35,k:450,d:"120 g chicken + ½–¾ microwave rice pouch + 1 cup veg"},
+ {id:"l3",name:"Big salad + chickpeas + feta + 2 boiled eggs",p:28,k:420,d:"2 cups salad + ½ can chickpeas + 30 g feta + 2 eggs"},
+ {id:"l4",name:"Cottage cheese + wholegrain crackers + boiled eggs + veg sticks",p:32,k:380,d:"½ cup cottage cheese + 6 crackers + 2 eggs + veg sticks"},
+ {id:"l5",name:"Leftover-dinner protein bowl (extra meat + salad)",p:35,k:450,d:"~120 g of last night's meat + salad or leftover veg"},
+ {id:"l6",name:"Greek-yoghurt bento — yoghurt, nuts, fruit, cheese, turkey slices",p:30,k:420,d:"170 g yoghurt + small handful nuts + fruit + 30 g cheese + 3 slices turkey"},
+ {id:"l7",name:"Wholegrain wrap + hummus + grilled chicken + salad",p:33,k:450,d:"1 wrap + 2 tbsp hummus + 100 g chicken + salad"},
+ {id:"l8",name:"Cheese & ham toastie + side salad + high-protein yoghurt",p:32,k:470,d:"2 slices bread + 2 slices ham + 1 slice cheese + side salad + 1 yoghurt pottle"},
+ {id:"l9",name:"Pesto chicken pasta salad with veg",p:32,k:450,d:"1½ cups cooked pasta + 100 g chicken + 1 tbsp pesto + veg"},
+ {id:"l10",name:"Burrito bowl — savoury mince, beans, rice, cheese & salsa",p:35,k:470,d:"150 g mince + ½ can beans + ½ cup rice + 30 g cheese + salsa"},
+ {id:"l11",name:"Tuna + brown rice or couscous pouch + veg",p:35,k:450,fish:true,d:"1 large tin (185 g) tuna + ½–¾ rice pouch + 1 cup veg"},
+ {id:"l12",name:"Ham, cheese & salad sandwich + a boiled egg",p:30,k:450,d:"2 slices bread + 2 slices ham + 1 slice cheese + salad + 1 egg"},
+ {id:"l13",name:"Microwave jacket potato + chilli beans + cheese",p:25,k:450,d:"1 large potato (microwave ~8 min) + ½ can chilli beans + 30 g cheese"},
 ];
 const SNACKS=[
- {id:"s1",name:"High-protein yoghurt / skyr pottle",p:17,k:120,pd:"15–20"},
- {id:"s2",name:"Cottage cheese + fruit",p:14,k:150},
- {id:"s3",name:"2 boiled eggs",p:12,k:140},
- {id:"s4",name:"Beef jerky / biltong (small pack)",p:15,k:120},
- {id:"s5",name:"Protein bar",p:17,k:200,pd:"15–20"},
- {id:"s6",name:"Handful of nuts + cheese stick",p:12,k:250},
- {id:"s7",name:"Ham or turkey slices rolled around cheese",p:14,k:150},
- {id:"s8",name:"Hummus + veg sticks + a boiled egg",p:12,k:200},
- {id:"s9",name:"Shredded chicken on wholegrain crackers",p:15,k:180},
- {id:"s10",name:"RTD protein shake",p:27,k:150,pd:"25–30"},
- {id:"s11",name:"Tuna or salmon pouch on crackers",p:20,k:200,fish:true},
- {id:"s12",name:"Peanut butter on rice cakes + glass of milk",p:14,k:250},
+ {id:"s1",name:"High-protein yoghurt / skyr pottle",p:17,k:120,pd:"15–20",d:"1 pottle (150–170 g)"},
+ {id:"s2",name:"Cottage cheese + fruit",p:14,k:150,d:"½ cup cottage cheese + 1 piece of fruit"},
+ {id:"s3",name:"2 boiled eggs",p:12,k:140,d:"2 eggs"},
+ {id:"s4",name:"Beef jerky / biltong (small pack)",p:15,k:120,d:"1 small pack (~25–30 g)"},
+ {id:"s5",name:"Protein bar",p:17,k:200,pd:"15–20",d:"1 bar"},
+ {id:"s6",name:"Handful of nuts + cheese stick",p:12,k:250,d:"30 g nuts + 1 cheese stick"},
+ {id:"s7",name:"Ham or turkey slices rolled around cheese",p:14,k:150,d:"2–3 slices + 1 cheese stick, rolled"},
+ {id:"s8",name:"Hummus + veg sticks + a boiled egg",p:12,k:200,d:"2 tbsp hummus + veg sticks + 1 egg"},
+ {id:"s9",name:"Shredded chicken on wholegrain crackers",p:15,k:180,d:"60–80 g chicken on 4 crackers"},
+ {id:"s10",name:"RTD protein shake",p:27,k:150,pd:"25–30",d:"1 bottle (~330 ml)"},
+ {id:"s11",name:"Tuna or salmon pouch on crackers",p:20,k:200,fish:true,d:"1 pouch (85 g) on 4 crackers"},
+ {id:"s12",name:"Peanut butter on rice cakes + glass of milk",p:14,k:250,d:"2 rice cakes + 1 tbsp PB + 1 cup milk"},
 ];
 const MEAL_BY_ID={};[...BREAKFASTS,...LUNCHES,...SNACKS].forEach(m=>MEAL_BY_ID[m.id]=m);
 /* she won't eat fish — tuna/salmon options only show on his profile */
@@ -618,12 +638,13 @@ const MAX_WEEKS=8;
 /* ---------------- state ---------------- */
 const KEY="liftfuel.v2";
 const OLD_KEY="liftfuel.v1";
-const emptyMealWeek=()=>DAYS.map(()=>({b:null,l:null,s1:null,s2:null}));
+const emptyMealWeek=()=>DAYS.map(()=>({b:null,l:null,s1:null,s2:null,s3:null,bx:1,lx:1}));
 const emptyTrainWeek=()=>DAYS.map(()=>null);
 const defaultSettings=()=>({kcal:null,age:null,h:null,w:null,act:1.375,def:250,dinner:null,ppk:1.6});
 /* plausible input ranges — outside these a value is treated as not entered */
 const NUM_LIMITS={kcal:[800,4500],age:[16,95],h:[100,230],w:[30,250],dinner:[200,2000]};
-const MEAL_MAX=1350; // ≈ the most one breakfast + lunch + 2 snacks can reach from the presets
+const MULTS=[1,1.5,2]; // breakfast/lunch portion multipliers
+const MEAL_MAX=2400;   // ≈ the most a day can reach: 2× breakfast + 2× lunch + 3 snacks
 let state={
   weeks:1, week:0,
   meals:[emptyMealWeek()],
@@ -638,9 +659,11 @@ let expandedTrain=null; // day index with detail open (current week)
 
 function cleanMealWeek(w){
   const src=Array.isArray(w)&&w.length===7?w:[];
+  const mult=v=>MULTS.includes(+v)?+v:1;
   return DAYS.map((_,i)=>{const x=src[i]||{};return{
     b:MEAL_BY_ID[x.b]?x.b:null,l:MEAL_BY_ID[x.l]?x.l:null,
     s1:MEAL_BY_ID[x.s1]?x.s1:null,s2:MEAL_BY_ID[x.s2]?x.s2:null,
+    s3:MEAL_BY_ID[x.s3]?x.s3:null,bx:mult(x.bx),lx:mult(x.lx),
   };});
 }
 function cleanTrainWeek(w){
@@ -772,28 +795,42 @@ function randomMealWeek(){
     return DAYS.map((_,i)=>{
       let s1=pool.shift(),s2=pool.shift();
       if(s2===s1){const alt=pool.findIndex(x=>x!==s1);if(alt>-1){s2=pool.splice(alt,1)[0];}}
-      return {b:bs[i],l:ls[i],s1,s2};
+      return {b:bs[i],l:ls[i],s1,s2,s3:null,bx:1,lx:1};
     });
   }
-  // budget-aware: pick the snack pair that lands the day closest to the kcal budget
+  // budget-aware: search portion multipliers (1×/1.5×/2×) + 2-or-3-snack combos
+  // for the mix closest to the day's kcal budget, spreading intake through the day
+  const combos=[];
+  for(let a=0;a<SN.length;a++)for(let b=a+1;b<SN.length;b++){
+    combos.push({ids:[SN[a].id,SN[b].id],k:SN[a].k+SN[b].k,p:SN[a].p+SN[b].p});
+    for(let e=b+1;e<SN.length;e++)
+      combos.push({ids:[SN[a].id,SN[b].id,SN[e].id],k:SN[a].k+SN[b].k+SN[e].k,p:SN[a].p+SN[b].p+SN[e].p});
+  }
   let lastKey=null;
   return DAYS.map((_,i)=>{
-    const base=MEAL_BY_ID[bs[i]].k+MEAL_BY_ID[ls[i]].k;
-    const want=c.budget-base;
+    const bm=MEAL_BY_ID[bs[i]],lm=MEAL_BY_ID[ls[i]];
     const cands=[];
-    for(let a=0;a<SN.length;a++)for(let b=a+1;b<SN.length;b++){
-      cands.push({s1:SN[a].id,s2:SN[b].id,key:SN[a].id+"|"+SN[b].id,
-        diff:Math.abs(SN[a].k+SN[b].k-want),pp:SN[a].p+SN[b].p});
+    for(const bx of MULTS)for(const lx of MULTS){
+      const base=bm.k*bx+lm.k*lx;
+      const want=c.budget-base;
+      if(want<200&&(bx>1||lx>1))continue; // don't inflate mains just to starve the snacks
+      for(const cb of combos){
+        const diff=Math.abs(cb.k-want);
+        if(diff>320)continue;
+        // closest fit wins; mild preference for normal portions and 2 snacks; protein breaks ties
+        cands.push({bx,lx,cb,key:bx+"/"+lx+"/"+cb.ids.join("|"),
+          score:diff+(bx+lx-2)*40+(cb.ids.length-2)*15-cb.p*0.2});
+      }
     }
-    // closest to budget first; among near-equal fits, prefer more protein
-    cands.sort((x,y)=>(x.diff-y.diff)||(y.pp-x.pp));
-    const top=cands.slice(0,6).filter(p=>p.key!==lastKey);
-    const pick=top[Math.floor(Math.random()*top.length)]||cands[0];
+    cands.sort((x,y)=>x.score-y.score);
+    const top=cands.slice(0,8).filter(x=>x.key!==lastKey);
+    const pick=top[Math.floor(Math.random()*Math.min(top.length,5))]||cands[0]
+      ||{bx:2,lx:2,cb:combos.reduce((m,x)=>x.k>m.k?x:m,combos[0]),key:""}; // budget beyond reach: go max
     lastKey=pick.key;
-    return {b:bs[i],l:ls[i],s1:pick.s1,s2:pick.s2};
+    return {b:bs[i],l:ls[i],s1:pick.cb.ids[0],s2:pick.cb.ids[1],s3:pick.cb.ids[2]||null,bx:pick.bx,lx:pick.lx};
   });
 }
-const mealWeekHasPicks=w=>state.meals[w].some(d=>d.b||d.l||d.s1||d.s2);
+const mealWeekHasPicks=w=>state.meals[w].some(d=>d.b||d.l||d.s1||d.s2||d.s3);
 function buildMealWeek(){
   const w=state.week;
   const apply=()=>{state.meals[w]=randomMealWeek();save();renderFuel();};
@@ -816,17 +853,36 @@ function clearMeals(){
 }
 function dayTotals(d){
   let p=0,k=0,n=0;
-  for(const key of["b","l","s1","s2"]){const m=MEAL_BY_ID[d[key]];if(m){p+=m.p;k+=m.k;n++;}}
-  return {p,k,n};
+  const add=(id,x)=>{const m=MEAL_BY_ID[id];if(m){p+=m.p*x;k+=m.k*x;n++;}};
+  add(d.b,d.bx||1);add(d.l,d.lx||1);add(d.s1,1);add(d.s2,1);add(d.s3,1);
+  const req=["b","l","s1","s2"].filter(key=>!d[key]).length; // empty core slots
+  return {p:Math.round(p),k:Math.round(k),n,req};
 }
+const fmtMult=x=>x===1?"1×":x===1.5?"1.5×":"2×";
 function mealSlotRow(di,key,label){
-  const id=state.meals[state.week][di][key];const m=id?MEAL_BY_ID[id]:null;
-  return `<button class="slot" data-day="${di}" data-slot="${key}">
-    <span class="slotlabel">${label}</span>
-    <span class="slotval ${m?"":"empty"}">${m?esc(m.name):"Choose…"}</span>
-    <span class="slotmeta">${m?`~${m.pd||m.p} g · ${m.k} kcal`:""}</span>
-    <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-  </button>`;
+  const day=state.meals[state.week][di];
+  const id=day[key];const m=id?MEAL_BY_ID[id]:null;
+  const x=key==="b"?(day.bx||1):key==="l"?(day.lx||1):1;
+  const meta=m?(x===1?`~${m.pd||m.p} g · ${m.k} kcal`:`~${Math.round(m.p*x)} g · ${Math.round(m.k*x)} kcal`):"";
+  const canScale=(key==="b"||key==="l")&&m;
+  return `<div class="slotrow">
+    <button class="slot" data-day="${di}" data-slot="${key}">
+      <span class="slotlabel">${label}</span>
+      <span class="slotval ${m?"":"empty"}">${m?esc(m.name):"Choose…"}
+        ${m&&m.d?`<span class="slotdetail">${x>1?fmtMult(x)+" of: ":""}${esc(m.d)}</span>`:""}
+        ${m?`<span class="slotstats">${meta}</span>`:""}
+      </span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+    ${canScale?`<button class="portion ${x>1?"scaled":""}" data-day="${di}" data-slot="${key}" aria-label="Portion size, currently ${fmtMult(x)} — tap to change">${fmtMult(x)}</button>`:""}
+  </div>`;
+}
+function cyclePortion(di,key){
+  const d=state.meals[state.week][di];
+  const f=key==="b"?"bx":"lx";
+  const cur=d[f]||1;
+  d[f]=cur===1?1.5:cur===1.5?2:1;
+  save();renderFuel();
 }
 function renderFuel(){
   const v=document.getElementById("view-fuel");
@@ -837,7 +893,7 @@ function renderFuel(){
     let dinner="";
     if(c&&t.n){
       const left=c.target-t.k;
-      const gap=4-t.n;
+      const gap=t.req;
       const extra=gap?` — ${gap} slot${gap>1?"s":""} still empty`:"";
       const dWord=left>800?"dinner & extras":"dinner";
       dinner=left>0
@@ -854,6 +910,9 @@ function renderFuel(){
         ${mealSlotRow(i,"l","Lunch")}
         ${mealSlotRow(i,"s1","Snack 1")}
         ${mealSlotRow(i,"s2","Snack 2")}
+        ${state.meals[state.week][i].s3
+          ?mealSlotRow(i,"s3","Snack 3")
+          :`<button class="addsnack" data-day="${i}">+ Add a third snack</button>`}
       </div>
       ${dinner}
     </article>`;
@@ -869,7 +928,8 @@ function renderFuel(){
       <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
       ${title}<span class="cnt">${items.length} options</span></summary>
     <div class="libbody">${items.map(m=>`<div class="librow">
-      <span class="nm2">${esc(m.name)}</span><span class="m">~${m.pd||m.p} g · ~${m.k} kcal</span>
+      <span class="nm2">${esc(m.name)}${m.d?`<span class="odetail">${esc(m.d)}</span>`:""}</span>
+      <span class="m">~${m.pd||m.p} g · ~${m.k} kcal</span>
       <a class="ytbtn" href="${mealYT(m)}" target="_blank" rel="noopener" aria-label="Recipe videos for ${esc(m.name)}">${PLAY}</a>
     </div>`).join("")}</div>
   </details>`;
@@ -899,13 +959,19 @@ function renderFuel(){
   v.querySelectorAll(".slot").forEach(el=>{
     el.onclick=()=>openMealPicker(+el.dataset.day,el.dataset.slot);
   });
+  v.querySelectorAll(".portion").forEach(el=>{
+    el.onclick=()=>cyclePortion(+el.dataset.day,el.dataset.slot);
+  });
+  v.querySelectorAll(".addsnack").forEach(el=>{
+    el.onclick=()=>openMealPicker(+el.dataset.day,"s3");
+  });
 }
 function openMealPicker(di,key){
-  const listMap={b:forProfile(BREAKFASTS),l:forProfile(LUNCHES),s1:forProfile(SNACKS),s2:forProfile(SNACKS)};
-  const labelMap={b:"breakfast",l:"lunch",s1:"snack",s2:"snack"};
+  const listMap={b:forProfile(BREAKFASTS),l:forProfile(LUNCHES),s1:forProfile(SNACKS),s2:forProfile(SNACKS),s3:forProfile(SNACKS)};
+  const labelMap={b:"breakfast",l:"lunch",s1:"snack",s2:"snack",s3:"snack"};
   const cur=state.meals[state.week][di][key];
   openSheet(`Choose ${labelMap[key]} — ${DAYS[di]}, Week ${state.week+1}`,
-    listMap[key].map(m=>({id:m.id,label:m.name,meta:`~${m.pd||m.p} g · ~${m.k} kcal`,sel:m.id===cur,yt:mealYT(m)})),
+    listMap[key].map(m=>({id:m.id,label:m.name,sub:m.d,meta:`~${m.pd||m.p} g · ~${m.k} kcal`,sel:m.id===cur,yt:mealYT(m)})),
     id=>{state.meals[state.week][di][key]=id;save();renderFuel();},
     !!cur,
     ()=>{state.meals[state.week][di][key]=null;save();renderFuel();});
@@ -1218,7 +1284,7 @@ function calcOutHTML(){
   return `<div class="targets" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.join("")}</div>
     <p class="setnote">Dinner reserve: <b>~${c.dinner.toLocaleString()} kcal</b>${state.settings.dinner>0?" (your setting)":" (auto — 35% of the daily target)"} → leaving <b>~${c.budget.toLocaleString()} kcal</b> for breakfast, lunch and snacks. “Build week” on the Meals tab picks days to fit that.</p>
     ${c.budget<970?`<p class="setnote" style="color:var(--amber)">The lightest possible day here (smallest breakfast + lunch + 2 snacks) is ~970 kcal, so a ~${c.budget.toLocaleString()} kcal budget will always show days as over. Lower the dinner reserve or raise the daily target.</p>`:""}
-    ${c.budget>MEAL_MAX?`<p class="setnote" style="color:var(--amber)">One breakfast + lunch + 2 snacks tops out around ~${MEAL_MAX.toLocaleString()} kcal, so ~${(c.budget-MEAL_MAX).toLocaleString()} kcal of this budget can't be planned here — it lands in dinner &amp; extras (bigger portions, an extra snack, milk in coffees). Raise the dinner reserve to make the numbers honest.</p>`:""}
+    ${c.budget>MEAL_MAX?`<p class="setnote" style="color:var(--amber)">Even at 2× breakfast and lunch portions plus a third snack, a day tops out around ~${MEAL_MAX.toLocaleString()} kcal — ~${(c.budget-MEAL_MAX).toLocaleString()} kcal of this budget can't be planned here. Raise the dinner reserve to make the numbers honest.</p>`:""}
     ${c.manual&&c.maint?`<p class="setnote">For reference, estimated maintenance from your details is ~${c.maint.toLocaleString()} kcal — a target of ${c.target.toLocaleString()} is ${c.target<c.maint?`~${(c.maint-c.target).toLocaleString()} kcal below it${c.maint-c.target>500?" — that's a big deficit; the plan recommends 200–350":""}`:"at or above it"}.</p>`:""}
     ${!c.protein?`<p class="setnote">Add your weight and you'll get a protein target too.</p>`:""}`;
 }
@@ -1310,7 +1376,8 @@ function openSheet(title,items,onPick,showClear,onClear){
       <div class="optlist">
         ${items.map(it=>`<div class="optrow">
           <button class="opt ${it.sel?"sel":""}" data-id="${it.id}">
-            <span class="n">${esc(it.label)}</span><span class="m">${esc(it.meta||"")}</span>
+            <span class="nwrap"><span class="n">${esc(it.label)}</span>${it.sub?`<span class="odetail">${esc(it.sub)}</span>`:""}</span>
+            <span class="m">${esc(it.meta||"")}</span>
           </button>
           ${it.yt?`<a class="ytbtn" href="${it.yt}" target="_blank" rel="noopener" aria-label="Recipe videos for ${esc(it.label)}">${PLAY}</a>`:""}
         </div>`).join("")}
