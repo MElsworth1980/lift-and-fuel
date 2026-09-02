@@ -326,7 +326,7 @@ details.lib[open]>summary .caret{transform:rotate(90deg)}
 <div class="wrap">
   <header class="top">
     <h1 class="brand">Lift <span class="amp">&amp;</span> Fuel</h1>
-    <p class="tagline">2 lifts · 2 easy runs · protein-first breakfasts, lunches &amp; snacks</p>
+    <p class="tagline" id="tagline">2 lifts · 2 easy runs · protein-first breakfasts, lunches &amp; snacks</p>
   </header>
 
   <section id="view-fuel"></section>
@@ -487,9 +487,106 @@ const SESSIONS={
   links:[{t:"Tennis-elbow isometrics & eccentrics",q:"tennis elbow rehab isometric eccentric exercises"}]},
  active:{name:"Active family day — long walk / NEAT",kind:"rest",kindLabel:"Active",
   paras:["High-step day: long walk, pram walks, family outing. Daily steps matter more than the workouts for fat loss — work toward ~8,500/day."]},
+ /* ---- his sessions (3 lifts + easy/tempo/long runs) ---- */
+ mlift1:{name:"Lift 1 — squat & press",kind:"lift",kindLabel:"Lift",
+  groups:[
+   {label:"Main lift · rest 2–3 min between sets",items:[
+    {tag:"A",nm:"Back squat",scheme:"4 × 5–8",nt:"Leave 1–2 reps in reserve; add weight once every set hits the top of the range.",q:"barbell back squat form"},
+   ]},
+   {label:"Superset · rest ~90 s after the pair",items:[
+    {tag:"B1",nm:"Overhead press (barbell or DB)",scheme:"3 × 6–10",nt:"Brace hard; no leg drive.",q:"barbell overhead press form"},
+    {tag:"B2",nm:"Chin-up or inverted row",scheme:"3 × 6–10",nt:"Add load when bodyweight gets easy.",q:"chin up proper form"},
+   ]},
+   {label:"Superset · rest ~60 s after the pair",items:[
+    {tag:"C1",nm:"Bulgarian split squat",scheme:"2 × 8–10 / leg",nt:"",q:"bulgarian split squat form"},
+    {tag:"C2",nm:"Plank or ab rollout",scheme:"2 × 30–60 s",nt:"",q:"ab wheel rollout form"},
+   ]},
+  ]},
+ mlift2:{name:"Lift 2 — bench & row",kind:"lift",kindLabel:"Lift",
+  groups:[
+   {label:"Main lift · rest 2–3 min between sets",items:[
+    {tag:"A",nm:"Bench press",scheme:"4 × 5–8",nt:"Feet planted, controlled touch — no bouncing.",q:"barbell bench press form"},
+   ]},
+   {label:"Superset · rest ~90 s after the pair",items:[
+    {tag:"B1",nm:"Barbell row",scheme:"3 × 6–10",nt:"Flat back; pull to the lower ribs.",q:"barbell row form"},
+    {tag:"B2",nm:"Incline DB press",scheme:"3 × 8–12",nt:"",q:"incline dumbbell press form"},
+   ]},
+   {label:"Superset · rest ~60 s after the pair",items:[
+    {tag:"C1",nm:"Romanian deadlift",scheme:"3 × 8–10",nt:"Hinge, soft knees, bar close.",q:"romanian deadlift form"},
+    {tag:"C2",nm:"Biceps curl (bar or DB)",scheme:"2 × 10–12",nt:"",q:"dumbbell bicep curl form"},
+   ]},
+   {label:"Finisher",items:[
+    {tag:"D",nm:"Farmer carry",scheme:"2 × 30–40 m",nt:"Heavy, tall posture.",q:"farmers carry form"},
+   ]},
+  ]},
+ mlift3:{name:"Lift 3 — deadlift & pull",kind:"lift",kindLabel:"Lift",
+  groups:[
+   {label:"Main lift · rest 2–3 min between sets",items:[
+    {tag:"A",nm:"Deadlift",scheme:"3 × 4–6",nt:"Crisp reps, reset each pull — no grinding.",q:"conventional deadlift form"},
+   ]},
+   {label:"Superset · rest ~90 s after the pair",items:[
+    {tag:"B1",nm:"Seated DB shoulder press",scheme:"3 × 8–12",nt:"",q:"seated dumbbell shoulder press form"},
+    {tag:"B2",nm:"Pull-up or lat pulldown",scheme:"3 × 6–10",nt:"",q:"pull up proper form"},
+   ]},
+   {label:"Superset · rest ~60 s after the pair",items:[
+    {tag:"C1",nm:"Goblet or front squat",scheme:"3 × 8–10",nt:"",q:"goblet squat form"},
+    {tag:"C2",nm:"Single-arm DB row",scheme:"3 × 10–12 / arm",nt:"",q:"single arm dumbbell row form"},
+   ]},
+   {label:"Finisher",items:[
+    {tag:"D",nm:"Hanging knee raise or side plank",scheme:"2 × 10–15",nt:"",q:"hanging knee raise form"},
+   ]},
+  ]},
+ runEasy:{name:"Easy run — zone 2",kind:"run",kindLabel:"Run",
+  paras:["30–45 min at a genuinely conversational pace. This is most of your running — going harder here just steals from the tempo and long run."],
+  list:[
+   "Nose-breathing or full sentences = right pace. If in doubt, slower.",
+   "Fine back-to-back with another easy day; keep it away from the day after a hard leg session if legs are dead.",
+  ],
+  links:[{t:"Zone-2 running explained",q:"zone 2 running training explained"}]},
+ runTempo:{name:"Tempo run — comfortably hard",kind:"run",kindLabel:"Run",
+  paras:["The week's one hard run: 10 min easy warm-up → 20–30 min comfortably hard (short sentences only, not gasping) → 5–10 min easy cool-down."],
+  list:[
+   "One tempo per week is plenty alongside three lifts.",
+   "Never the day before or after the long run — pad hard days with easy ones.",
+   "Feeling flat? Cut it to 15 min or swap for an easy run — fitness is built on the weeks you don't dig holes.",
+  ],
+  links:[{t:"Tempo run pacing",q:"tempo run pacing how to"}]},
+ runLong:{name:"Long run — easy pace",kind:"run",kindLabel:"Run",
+  paras:["60–90 min at easy pace — the aerobic cornerstone. Slower than feels impressive is correct."],
+  list:[
+   "Grow it gradually (~10%/week cap) and hold or cut it every 4th week.",
+   "Over ~75 min: take carbs (gel, banana, sports drink) and fluids.",
+   "Golf or the bike can replace a run — prefer replacing an easy one and keeping this.",
+  ],
+  links:[{t:"Long run pacing & fuelling",q:"long run pacing fueling beginner"}]},
+ bike20:{name:"Bike ~20 km",kind:"cardio",kindLabel:"Bike",
+  paras:["A ~20 km ride replaces a run impact-free — steady zone-2 effort, or with a few harder efforts if it's standing in for the tempo."]},
+ golf:{name:"Round of golf (walking)",kind:"cardio",kindLabel:"Golf",
+  paras:["A walked 18 holes is ~10,000+ steps of low-intensity work — a fair swap for an easy run. Carry or push the clubs, skip the cart."]},
+ restM:{name:"Rest + mobility",kind:"rest",kindLabel:"Rest",
+  paras:["Recovery day: walk, stretch what's tight (hips, ankles, thoracic), and leave the gym alone. Adaptation happens here."]},
 };
-const SESSION_ORDER=["liftA","liftB","liftC","run","cross","rest","active"];
-const TEMPLATE=["liftA","run","rest","liftB","run","active","rest"];
+/* ---------------- profiles ---------------- */
+const PROFILES={
+ her:{
+  tagline:"2 lifts · 2 easy runs · protein-first breakfasts, lunches & snacks",
+  trainSub:"Two full-body lifts (35 min) + two easy runs. Tap a session name for the full workout and technique videos.",
+  trainNote:"Elbow rehab (wrist-extensor loading) is low-fatigue — do it most days regardless of what’s planned. If lifting and running land on the same day, lift first.",
+  order:["liftA","liftB","liftC","run","cross","rest","active"],
+  template:["liftA","run","rest","liftB","run","active","rest"],
+  maxLifts:2,maxRuns:2,easyRunsAdjacentOK:false,bmr:-161,formula:"women's",
+ },
+ him:{
+  tagline:"3 lifts · 3 runs · protein-first breakfasts, lunches & snacks",
+  trainSub:"Three lifts (always) + up to three runs — easy, tempo, long. Golf or a ~20 km bike can stand in for a run. Tap a session for the full workout.",
+  trainNote:"Pad hard days with easy ones: no lifts on consecutive days, and keep the tempo and long run apart. If lifting and running land on the same day, lift first.",
+  order:["mlift1","mlift2","mlift3","runEasy","runTempo","runLong","bike20","golf","restM","active"],
+  template:["mlift1","runEasy","mlift2","runTempo","mlift3","runLong","restM"],
+  maxLifts:3,maxRuns:3,easyRunsAdjacentOK:true,bmr:5,formula:"men's",
+ },
+};
+const prof=()=>PROFILES[state.profile]||PROFILES.her;
+const HARD_RUNS=["runTempo","runLong"];
 const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const MAX_WEEKS=8;
 
@@ -506,6 +603,7 @@ let state={
   meals:[emptyMealWeek()],
   training:[emptyTrainWeek()],
   settings:defaultSettings(),
+  profile:"her", // existing installs predate profiles → hers, unchanged
   tab:"fuel",
 };
 let expandedTrain=null; // day index with detail open (current week)
@@ -543,6 +641,7 @@ function load(){
         s.ppk=snap(d.settings.ppk,[1.4,1.6,1.8,2.0],s.ppk);
         state.settings=s;
       }
+      if(PROFILES[d.profile])state.profile=d.profile;
       if(["fuel","train","guide","set"].includes(d.tab))state.tab=d.tab;
       return;
     }
@@ -560,7 +659,7 @@ function load(){
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify({
     weeks:state.weeks,week:state.week,meals:state.meals,training:state.training,
-    settings:state.settings,tab:state.tab
+    settings:state.settings,profile:state.profile,tab:state.tab
   }));}catch(e){}
 }
 /* Calorie & protein targets.
@@ -570,7 +669,7 @@ function calcs(){
   const s=state.settings;
   if(!s)return null;
   let maint=null;
-  if(s.age>0&&s.h>0&&s.w>0)maint=Math.round((10*s.w+6.25*s.h-5*s.age-161)*s.act);
+  if(s.age>0&&s.h>0&&s.w>0)maint=Math.round((10*s.w+6.25*s.h-5*s.age+prof().bmr)*s.act);
   let target=null,manual=false;
   if(s.kcal>0){target=Math.round(s.kcal);manual=true;}
   else if(maint)target=Math.round(maint-s.def);
@@ -772,14 +871,14 @@ function openMealPicker(di,key){
 const trainWeekHasPicks=w=>state.training[w].some(Boolean);
 function buildTrainWeek(){
   const w=state.week;
-  const apply=()=>{state.training[w]=TEMPLATE.slice();expandedTrain=null;save();renderTrain();};
+  const apply=()=>{state.training[w]=prof().template.slice();expandedTrain=null;save();renderTrain();};
   if(trainWeekHasPicks(w))
     askConfirm(`Reset Week ${w+1} to the standard template? This replaces its current sessions.`,"Reset week",apply);
   else apply();
 }
 function buildAllTrainWeeks(){
   askConfirm(`Fill all ${state.weeks} weeks with the standard template? This replaces every week's sessions.`,"Build all",()=>{
-    state.training=state.training.map(()=>TEMPLATE.slice());
+    state.training=state.training.map(()=>prof().template.slice());
     expandedTrain=null;save();renderTrain();
   });
 }
@@ -791,10 +890,16 @@ function clearTrain(){
   });
 }
 function trainWarnings(){
+  const p=prof();
   const w=[];
-  const flat=[];// {kind,run,label} timeline across all weeks
+  const isRun=s=>!!s&&SESSIONS[s].kind==="run";
+  // adjacent-run rule: hers — never two run days in a row; his — only two HARD runs in a row
+  const runClash=(a,b)=>isRun(a)&&isRun(b)&&(!p.easyRunsAdjacentOK||(HARD_RUNS.includes(a)&&HARD_RUNS.includes(b)));
+  const runMsg=p.easyRunsAdjacentOK?"keep the tempo and long run apart":"never run two days in a row";
+  const clashWord=p.easyRunsAdjacentOK?"Hard runs back-to-back":"Runs on consecutive days";
+  const flat=[];// timeline across all weeks
   state.training.forEach((week,wi)=>week.forEach((s,di)=>{
-    flat.push({s,wi,di,label:(state.weeks>1?`Wk${wi+1} `:"")+DAYS[di].slice(0,3)});
+    flat.push({s,label:(state.weeks>1?`Wk${wi+1} `:"")+DAYS[di].slice(0,3)});
   }));
   const seen=new Set();const add=m=>{if(!seen.has(m)){seen.add(m);w.push(m);}};
   for(let i=1;i<flat.length;i++){
@@ -802,23 +907,23 @@ function trainWarnings(){
     if(a.s&&b.s){
       if(SESSIONS[a.s].kind==="lift"&&SESSIONS[b.s].kind==="lift")
         add(`Lifts on back-to-back days (${a.label} → ${b.label}) — leave at least 48 h between full-body sessions.`);
-      if(a.s==="run"&&b.s==="run")
-        add(`Runs on consecutive days (${a.label} → ${b.label}) — never run two days in a row.`);
+      if(runClash(a.s,b.s))
+        add(`${clashWord} (${a.label} → ${b.label}) — ${runMsg}.`);
     }
   }
   if(state.weeks===1){ // single week repeats: check Sun → next Mon
     const a=flat[6],b=flat[0];
     if(a.s&&b.s&&SESSIONS[a.s].kind==="lift"&&SESSIONS[b.s].kind==="lift")
       add("Sunday and Monday lifts are back-to-back once the week repeats — leave at least 48 h between.");
-    if(a.s==="run"&&b.s==="run")
-      add("Sunday and Monday runs are back-to-back once the week repeats — space them out.");
+    if(a.s&&b.s&&runClash(a.s,b.s))
+      add(`Sunday and Monday runs clash once the week repeats — ${runMsg}.`);
   }
   state.training.forEach((week,wi)=>{
     const tag=state.weeks>1?` in Week ${wi+1}`:" this week";
     const lifts=week.filter(s=>s&&SESSIONS[s].kind==="lift").length;
-    const runs=week.filter(s=>s==="run").length;
-    if(lifts>2)add(`More than 2 lifts${tag} — the plan is built around two full-body sessions.`);
-    if(runs>2)add(`More than 2 runs${tag} — keep extra cardio low-impact (cross-train) instead.`);
+    const runs=week.filter(isRun).length;
+    if(lifts>p.maxLifts)add(`More than ${p.maxLifts} lifts${tag} — the plan is built around ${p.maxLifts===2?"two":"three"} sessions.`);
+    if(runs>p.maxRuns)add(`More than ${p.maxRuns} runs${tag} — swap the extras for low-impact cardio${p.easyRunsAdjacentOK?" (bike / golf)":" (cross-train)"} instead.`);
   });
   return w;
 }
@@ -875,7 +980,7 @@ function renderTrain(){
   });
   v.innerHTML=`
     <h2 class="section">Training week</h2>
-    <p class="section-sub">Two full-body lifts (35 min) + two easy runs. Tap a session name for the full workout and technique videos.</p>
+    <p class="section-sub">${prof().trainSub}</p>
     ${weekbarHTML("train")}
     <div class="actions">
       <button class="btn" id="build-train">${trainWeekHasPicks(state.week)?"↻ Reset to template":`Build Week ${state.week+1}`}</button>
@@ -887,7 +992,7 @@ function renderTrain(){
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
       <span>${esc(w)}</span></div>`).join("")}</div>`:""}
     <div class="daylist">${cards}</div>
-    <p class="weeknote">Elbow rehab (wrist-extensor loading) is low-fatigue — do it most days regardless of what’s planned. If lifting and running land on the same day, lift first.</p>
+    <p class="weeknote">${prof().trainNote}</p>
   `;
   bindWeekbar(v,"train");
   document.getElementById("build-train").onclick=buildTrainWeek;
@@ -904,18 +1009,56 @@ function renderTrain(){
 function openTrainPicker(di){
   const cur=state.training[state.week][di];
   openSheet(`Choose session — ${DAYS[di]}, Week ${state.week+1}`,
-    SESSION_ORDER.map(id=>({id,label:SESSIONS[id].name,meta:SESSIONS[id].kindLabel,sel:id===cur})),
+    prof().order.map(id=>({id,label:SESSIONS[id].name,meta:SESSIONS[id].kindLabel,sel:id===cur})),
     id=>{state.training[state.week][di]=id;expandedTrain=null;save();renderTrain();},
     !!cur,
     ()=>{state.training[state.week][di]=null;if(expandedTrain===di)expandedTrain=null;save();renderTrain();});
 }
 
 /* ---------------- guide view ---------------- */
+function applyProfile(){
+  document.getElementById("tagline").textContent=prof().tagline;
+  renderFuel();renderTrain();renderGuide();
+}
 function renderGuide(){
   const v=document.getElementById("view-guide");
   const sec=(title,body)=>`<details class="lib"><summary>
     <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
     ${title}</summary><div class="libbody">${body}</div></details>`;
+  if(state.profile==="him"){
+    v.innerHTML=`
+    <h2 class="section">The rules that make it work</h2>
+    <p class="section-sub">Three lifts, three runs, and the discipline to keep the easy days easy.</p>
+    <div class="guide-note"><b>The week at a glance:</b> Mon Lift 1 · Tue easy run · Wed Lift 2 · Thu tempo · Fri Lift 3 · Sat long run (or golf / bike) · Sun rest.</div>
+    ${sec("How hard to lift",`
+      <ul><li><b>Main lifts</b> (squat, bench, deadlift): 1–2 reps in reserve on top sets — heavy but never grinding.</li>
+      <li><b>Accessories:</b> 8–12 reps, 1–3 in reserve; push the last set of isolation work close to failure if you feel good.</li>
+      <li><b>Double progression:</b> add reps at a fixed weight until every set hits the top of the range, then add weight and drop back.</li>
+      <li>Deload every 6–8 weeks (or when joints ache and lifts stall together): halve the volume for a week.</li></ul>`)}
+    ${sec("The run mix",`
+      <ul><li>Keep <b>~80% of running easy</b> — conversational pace. The most common mistake is running easy days too hard.</li>
+      <li><b>One tempo</b> (20–30 min comfortably hard) and <b>one long run</b> (60–90 min easy) per week, never back-to-back.</li>
+      <li>Long run grows ~10%/week max; hold or cut it back every 4th week.</li>
+      <li>Two easy runs on consecutive days is fine — two hard days is not.</li></ul>`)}
+    ${sec("Golf & bike swaps",`
+      <ul><li>A walked round of golf or a ~20 km bike is a fair swap for a run — <b>replace the easy run first</b> and keep the long run most weeks.</li>
+      <li>If the bike stands in for the tempo, ride it with intent — a few sustained hard efforts, not a cruise.</li></ul>`)}
+    ${sec("Recovery rules",`
+      <ul><li>At least 48 h between full-body lifts (Mon / Wed / Fri spacing handles it).</li>
+      <li>Lifting and running the same day: lift first, or split them by several hours.</li>
+      <li>Sleep is the biggest lever — 7+ hours. If performance, mood and sleep all dip together, take an easy week.</li></ul>`)}
+    ${sec("Food targets",`
+      <ul><li><b>~1.6–2.0 g protein / kg / day</b>, spread over 3–4 meals of 30–40 g.</li>
+      <li>Cutting? Keep the deficit small (~200–350 kcal) — bigger ones cost muscle and training quality. Maintaining or building: eat to appetite around the target.</li>
+      <li>Fibre ~30 g/day; carbs around the tempo and long run days help quality.</li>
+      <li>Optional: creatine 3–5 g/day — the best-evidenced supplement there is.</li></ul>`)}
+    ${sec("When to back off",`
+      <ul><li>Niggles that change your gait or lifting form get 3–5 days of swaps (bike, golf, easy walk) before they become injuries — cheap insurance.</li>
+      <li>A missed session is noise. Weeks of consistency are the signal.</li></ul>`)}
+    <p class="disclaimer">General information, not individual medical advice. If a pain is sharp, joint-based, or hangs around beyond a week, get it looked at rather than training through it.</p>
+    `;
+    return;
+  }
   v.innerHTML=`
     <h2 class="section">The rules that make it work</h2>
     <p class="section-sub">Everything here comes from the full evidence-based plan — the short version, on your phone.</p>
@@ -988,6 +1131,13 @@ function renderSettings(){
     <h2 class="section">Settings</h2>
     <p class="section-sub">Everything stays on this phone — nothing is sent anywhere.</p>
     <div class="form">
+      <div class="field"><label for="s-prof">Whose plan?</label>
+        <select id="s-prof">
+          <option value="her"${state.profile==="her"?" selected":""}>Hers — injury-aware · 2 lifts + 2 easy runs</option>
+          <option value="him"${state.profile==="him"?" selected":""}>His — 3 lifts + 3 runs (easy / tempo / long)</option>
+        </select></div>
+    </div>
+    <div class="form">
       <div class="field"><label for="s-kcal">Daily calorie target <span class="unit">kcal — leave blank to calculate it from the details below</span></label>
         <input id="s-kcal" type="number" inputmode="numeric" min="1000" max="4000" step="50" value="${val(s.kcal)}" placeholder="auto"></div>
       <div class="fgrid">
@@ -1022,7 +1172,7 @@ function renderSettings(){
         </select></div>
     </div>
     <div id="calc-out">${calcOutHTML()}</div>
-    <p class="setnote">Estimates only (Mifflin-St Jeor, women's formula). The real test is the 2–3-week trend: fat loss faster than ~0.7% of bodyweight a week, or energy/sleep dropping → eat more. Stalled 2–3 weeks with good adherence → trim ~150 kcal or add ~1,500 steps first. Deficits stay small on purpose — big ones cost muscle and healing.</p>
+    <p class="setnote">Estimates only (Mifflin-St Jeor, ${prof().formula} formula). The real test is the 2–3-week trend: fat loss faster than ~0.7% of bodyweight a week, or energy/sleep dropping → eat more. Stalled 2–3 weeks with good adherence → trim ~150 kcal or add ~1,500 steps first. Deficits stay small on purpose — big ones cost muscle and healing.</p>
   `;
   const num=(id,k)=>{
     const n=parseFloat(document.getElementById(id).value),[lo,hi]=NUM_LIMITS[k];
@@ -1044,6 +1194,10 @@ function renderSettings(){
   };
   for(const id of["s-kcal","s-age","s-h","s-w","s-dinner"])document.getElementById(id).oninput=update;
   for(const id of["s-act","s-def","s-ppk"])document.getElementById(id).onchange=update;
+  document.getElementById("s-prof").onchange=e=>{
+    state.profile=PROFILES[e.target.value]?e.target.value:"her";
+    save();applyProfile();renderSettings();
+  };
 }
 
 /* ---------------- sheet ---------------- */
@@ -1120,7 +1274,7 @@ document.getElementById("tab-set").onclick=()=>setTab("set");
 
 /* ---------------- init ---------------- */
 load();
-renderFuel();renderTrain();renderGuide();renderSettings();
+applyProfile();renderSettings();
 setTab(state.tab);
 </script>
 </body>
