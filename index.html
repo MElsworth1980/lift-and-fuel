@@ -96,6 +96,12 @@ h2.section{
   color:var(--amber);border-radius:10px;padding:9px 12px;font-size:13.5px;font-weight:500;
 }
 .warn svg{flex:none;margin-top:2px}
+.warn span{flex:1}
+.warnx{
+  appearance:none;background:none;border:0;color:var(--amber);cursor:pointer;
+  flex:none;display:flex;align-items:center;justify-content:center;
+  min-width:30px;min-height:30px;margin:-6px -6px -6px 0;padding:0;border-radius:8px;
+}
 .daylist{display:flex;flex-direction:column;gap:12px}
 .day{
   background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
@@ -680,6 +686,7 @@ let state={
   settings:defaultSettings(),
   profile:"her", // existing installs predate profiles → hers, unchanged
   names:{}, // custom workout names, keyed by session id
+  dismissed:[], // training warnings the user has X-ed away (cleared when the conflict clears)
   tab:"fuel",
 };
 const sName=id=>state.names[id]||SESSIONS[id].name;
@@ -727,6 +734,8 @@ function load(){
             state.names[k]=d.names[k].trim().slice(0,40);
         }
       }
+      if(Array.isArray(d.dismissed))
+        state.dismissed=d.dismissed.filter(x=>typeof x==="string").slice(0,50);
       if(["fuel","train","guide","set"].includes(d.tab))state.tab=d.tab;
       return;
     }
@@ -744,7 +753,8 @@ function load(){
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify({
     weeks:state.weeks,week:state.week,meals:state.meals,training:state.training,
-    settings:state.settings,profile:state.profile,names:state.names,tab:state.tab
+    settings:state.settings,profile:state.profile,names:state.names,
+    dismissed:state.dismissed,tab:state.tab
   }));}catch(e){}
 }
 /* Calorie & protein targets.
@@ -928,8 +938,11 @@ function renderFuel(){
         ?`<div class="dinnerline ${!gap&&left<400?"tight":""}">Leaves ~${left.toLocaleString()} kcal for ${dWord}${!gap&&left<400?" — a light one":""}${extra}</div>`
         :`<div class="dinnerline tight">~${Math.abs(left).toLocaleString()} kcal over the daily target before dinner${extra}</div>`;
     }
-    cards+=`<article class="day ${i===todayIdx?"today":""}">
+    cards+=`<article class="day ${i===todayIdx?"today":""}" data-di="${i}">
       <div class="dayhead">
+        <button class="draghandle" data-di="${i}" aria-label="Drag to move ${day}'s meals">
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><circle cx="4" cy="3" r="1.6"/><circle cx="10" cy="3" r="1.6"/><circle cx="4" cy="8" r="1.6"/><circle cx="10" cy="8" r="1.6"/><circle cx="4" cy="13" r="1.6"/><circle cx="10" cy="13" r="1.6"/></svg>
+        </button>
         <span class="dayname">${day}${i===todayIdx?'<span class="todaytag">Today</span>':""}</span>
         ${t.n?`<button class="copybtn" data-copy="${i}" aria-label="Copy ${day}'s meals to other days">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -999,6 +1012,13 @@ function renderFuel(){
   v.querySelectorAll(".copybtn").forEach(el=>{
     el.onclick=()=>openCopyDay(+el.dataset.copy);
   });
+  bindDayDrag(v,swapMealDays);
+}
+function swapMealDays(a,b){
+  if(a===b)return;
+  const t=state.meals[state.week];
+  [t[a],t[b]]=[t[b],t[a]];
+  save();renderFuel();
 }
 function copyMealDay(from,targets){
   const src=state.meals[state.week][from];
@@ -1137,7 +1157,10 @@ function detailHTML(sid){
 }
 function renderTrain(){
   const v=document.getElementById("view-train");
-  const warns=trainWarnings();
+  const allWarns=trainWarnings();
+  // a dismissal lives only while its conflict does — fix it and recreate it, and the warning returns
+  state.dismissed=(state.dismissed||[]).filter(d=>allWarns.includes(d));
+  const warns=allWarns.filter(w=>!state.dismissed.includes(w));
   let cards="";
   DAYS.forEach((day,i)=>{
     const sid=state.training[state.week][i];const s=sid?SESSIONS[sid]:null;
@@ -1174,9 +1197,12 @@ function renderTrain(){
       ${trainWeekHasPicks(state.week)?`<button class="btn ghost" id="clear-train">Clear week</button>`:""}
       ${state.weeks>1?`<button class="btn ghost" id="rm-week-train">Remove week</button>`:""}
     </div>
-    ${warns.length?`<div class="warnings">${warns.map(w=>`<div class="warn">
+    ${warns.length?`<div class="warnings">${warns.map((w,wi)=>`<div class="warn">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-      <span>${esc(w)}</span></div>`).join("")}</div>`:""}
+      <span>${esc(w)}</span>
+      <button class="warnx" data-wi="${wi}" aria-label="Dismiss this warning">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button></div>`).join("")}</div>`:""}
     <div class="daylist">${cards}</div>
     <p class="weeknote">${prof().trainNote}</p>
   `;
@@ -1191,13 +1217,19 @@ function renderTrain(){
   v.querySelectorAll(".swap[data-day]").forEach(el=>{
     el.onclick=()=>openTrainPicker(+el.dataset.day);
   });
+  v.querySelectorAll(".warnx").forEach(el=>{
+    el.onclick=()=>{state.dismissed.push(warns[+el.dataset.wi]);save();renderTrain();};
+  });
   v.querySelectorAll("[data-rn]").forEach(el=>{
     el.onclick=()=>renameSession(el.dataset.rn);
   });
   v.querySelectorAll("[data-rr]").forEach(el=>{
     el.onclick=()=>{delete state.names[el.dataset.rr];save();renderTrain();};
   });
-  // drag a day card by its handle onto another day to swap the two sessions
+  bindDayDrag(v,swapTrainDays);
+}
+/* drag a day card by its handle onto another day card to swap the two days */
+function bindDayDrag(v,onSwap){
   v.querySelectorAll(".draghandle").forEach(h=>{
     h.onpointerdown=e=>{
       e.preventDefault();
@@ -1218,7 +1250,7 @@ function renderTrain(){
         h.removeEventListener("pointerup",up);
         h.removeEventListener("pointercancel",up);
         src.classList.remove("dragsrc");
-        if(over){const to=+over.dataset.di;over.classList.remove("droptarget");swapTrainDays(from,to);}
+        if(over){const to=+over.dataset.di;over.classList.remove("droptarget");onSwap(from,to);}
       };
       h.addEventListener("pointermove",move);
       h.addEventListener("pointerup",up);
