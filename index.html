@@ -103,11 +103,12 @@ h2.section{
 }
 .day.today{border-color:var(--pine)}
 .dayhead{
-  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  display:flex;align-items:center;gap:8px;
   padding:12px 14px 8px;
 }
 .dayname{
   font-family:"Bricolage Grotesque","Figtree",sans-serif;font-weight:700;font-size:16.5px;
+  flex:1;
 }
 .todaytag{
   font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
@@ -275,6 +276,21 @@ details.lib[open]>summary .caret{transform:rotate(90deg)}
 .sheet.confirm h3{font-size:16px;line-height:1.45;margin:10px 16px 14px}
 .confirmrow{display:flex;gap:10px;padding:0 16px 18px}
 .confirmrow .btn{flex:1}
+.inputrow{padding:0 16px 14px}
+.inputrow input{
+  width:100%;background:var(--card2);color:var(--ink);
+  border:1.5px solid var(--line-strong);border-radius:10px;
+  padding:11px 12px;font:500 16px "Figtree",sans-serif;
+}
+.inputrow input:focus{outline:2.5px solid var(--run);outline-offset:1px;border-color:transparent}
+.renamerow{display:flex;gap:8px;margin:0 0 10px}
+.draghandle{
+  appearance:none;background:none;border:0;color:var(--muted);cursor:grab;
+  touch-action:none;padding:6px 10px 6px 2px;margin:-6px 0 -6px -2px;
+  display:flex;align-items:center;flex:none;
+}
+.day.dragsrc{opacity:.55}
+.day.droptarget{border-color:var(--run);box-shadow:0 0 0 2px var(--run-tint)}
 .weeknote{color:var(--muted);font-size:13px;margin:14px 2px 0;line-height:1.5}
 /* targets strip + dinner line */
 .targets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 0}
@@ -371,6 +387,8 @@ const BREAKFASTS=[
  {id:"b7",name:"RTD protein shake + boiled egg + fruit",p:35,k:350},
  {id:"b8",name:"Protein pancakes — blend oats, banana, egg + scoop of powder",p:30,k:380},
  {id:"b9",name:"Weet-Bix + milk, topped with high-protein yoghurt",p:28,k:350},
+ {id:"b10",name:"Tinned salmon or tuna + avocado on toast",p:30,k:380,fish:true},
+ {id:"b11",name:"Baked beans & grated cheese on toast",p:23,k:420},
 ];
 const LUNCHES=[
  {id:"l1",name:"Chicken + salad wholegrain wrap (batch-cooked or rotisserie)",p:35,k:450},
@@ -383,6 +401,9 @@ const LUNCHES=[
  {id:"l8",name:"Cheese & ham toastie + side salad + high-protein yoghurt",p:32,k:470},
  {id:"l9",name:"Pesto chicken pasta salad with veg",p:32,k:450},
  {id:"l10",name:"Burrito bowl — savoury mince, beans, rice, cheese & salsa",p:35,k:470},
+ {id:"l11",name:"Tuna + brown rice or couscous pouch + veg",p:35,k:450,fish:true},
+ {id:"l12",name:"Ham, cheese & salad sandwich + a boiled egg",p:30,k:450},
+ {id:"l13",name:"Microwave jacket potato + chilli beans + cheese",p:25,k:450},
 ];
 const SNACKS=[
  {id:"s1",name:"High-protein yoghurt / skyr pottle",p:17,k:120,pd:"15–20"},
@@ -395,8 +416,12 @@ const SNACKS=[
  {id:"s8",name:"Hummus + veg sticks + a boiled egg",p:12,k:200},
  {id:"s9",name:"Shredded chicken on wholegrain crackers",p:15,k:180},
  {id:"s10",name:"RTD protein shake",p:27,k:150,pd:"25–30"},
+ {id:"s11",name:"Tuna or salmon pouch on crackers",p:20,k:200,fish:true},
+ {id:"s12",name:"Peanut butter on rice cakes + glass of milk",p:14,k:250},
 ];
 const MEAL_BY_ID={};[...BREAKFASTS,...LUNCHES,...SNACKS].forEach(m=>MEAL_BY_ID[m.id]=m);
+/* she won't eat fish — tuna/salmon options only show on his profile */
+const forProfile=list=>state.profile==="her"?list.filter(m=>!m.fish):list;
 
 /* ---------------- YouTube search links ---------------- */
 const ytURL=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
@@ -598,14 +623,17 @@ const emptyTrainWeek=()=>DAYS.map(()=>null);
 const defaultSettings=()=>({kcal:null,age:null,h:null,w:null,act:1.375,def:250,dinner:null,ppk:1.6});
 /* plausible input ranges — outside these a value is treated as not entered */
 const NUM_LIMITS={kcal:[800,4500],age:[16,95],h:[100,230],w:[30,250],dinner:[200,2000]};
+const MEAL_MAX=1350; // ≈ the most one breakfast + lunch + 2 snacks can reach from the presets
 let state={
   weeks:1, week:0,
   meals:[emptyMealWeek()],
   training:[emptyTrainWeek()],
   settings:defaultSettings(),
   profile:"her", // existing installs predate profiles → hers, unchanged
+  names:{}, // custom workout names, keyed by session id
   tab:"fuel",
 };
+const sName=id=>state.names[id]||SESSIONS[id].name;
 let expandedTrain=null; // day index with detail open (current week)
 
 function cleanMealWeek(w){
@@ -642,6 +670,12 @@ function load(){
         state.settings=s;
       }
       if(PROFILES[d.profile])state.profile=d.profile;
+      if(d.names&&typeof d.names==="object"){
+        for(const k in d.names){
+          if(SESSIONS[k]&&typeof d.names[k]==="string"&&d.names[k].trim())
+            state.names[k]=d.names[k].trim().slice(0,40);
+        }
+      }
       if(["fuel","train","guide","set"].includes(d.tab))state.tab=d.tab;
       return;
     }
@@ -659,7 +693,7 @@ function load(){
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify({
     weeks:state.weeks,week:state.week,meals:state.meals,training:state.training,
-    settings:state.settings,profile:state.profile,tab:state.tab
+    settings:state.settings,profile:state.profile,names:state.names,tab:state.tab
   }));}catch(e){}
 }
 /* Calorie & protein targets.
@@ -675,7 +709,9 @@ function calcs(){
   else if(maint)target=Math.round(maint-s.def);
   if(!target)return null;
   const protein=s.w>0?Math.round(s.w*s.ppk):null;
-  const dinnerAuto=Math.round(target*0.35/50)*50;
+  // auto reserve: ~35% of target, but never leave the meals more than they can
+  // actually deliver (breakfast + lunch + 2 snacks tops out around MEAL_MAX)
+  const dinnerAuto=Math.max(Math.round(target*0.35/50)*50, target-MEAL_MAX);
   const dinner=s.dinner>0?Math.round(s.dinner):dinnerAuto;
   const budget=Math.max(0,target-dinner);
   return {maint,target,protein,dinner,dinnerAuto,budget,manual};
@@ -722,25 +758,32 @@ function removeCurrentWeek(){
 /* ---------------- meals view ---------------- */
 function randomMealWeek(){
   const c=calcs();
-  const bs=shuffle(BREAKFASTS).map(x=>x.id);
-  const ls=shuffle(LUNCHES).map(x=>x.id).slice(0,7);
+  const B=forProfile(BREAKFASTS),L=forProfile(LUNCHES),SN=forProfile(SNACKS);
+  // big budget → favour the bigger breakfasts/lunches; tight budget → the lighter ones
+  const mode=c?(c.budget>=1250?"high":c.budget<=1050?"low":null):null;
+  const pick7=list=>{
+    let pool=list.slice();
+    if(mode){pool.sort((a,b)=>mode==="high"?b.k-a.k:a.k-b.k);pool=pool.slice(0,7);}
+    return shuffle(pool).slice(0,7).map(x=>x.id);
+  };
+  const bs=pick7(B),ls=pick7(L);
   if(!c){ // no settings yet — plain variety shuffle
-    let pool=shuffle(SNACKS).concat(shuffle(SNACKS)).map(x=>x.id);
+    let pool=shuffle(SN).concat(shuffle(SN)).map(x=>x.id);
     return DAYS.map((_,i)=>{
       let s1=pool.shift(),s2=pool.shift();
       if(s2===s1){const alt=pool.findIndex(x=>x!==s1);if(alt>-1){s2=pool.splice(alt,1)[0];}}
       return {b:bs[i],l:ls[i],s1,s2};
     });
   }
-  // budget-aware: pick the snack pair that lands the day closest to her kcal budget
+  // budget-aware: pick the snack pair that lands the day closest to the kcal budget
   let lastKey=null;
   return DAYS.map((_,i)=>{
     const base=MEAL_BY_ID[bs[i]].k+MEAL_BY_ID[ls[i]].k;
     const want=c.budget-base;
     const cands=[];
-    for(let a=0;a<SNACKS.length;a++)for(let b=a+1;b<SNACKS.length;b++){
-      cands.push({s1:SNACKS[a].id,s2:SNACKS[b].id,key:SNACKS[a].id+"|"+SNACKS[b].id,
-        diff:Math.abs(SNACKS[a].k+SNACKS[b].k-want),pp:SNACKS[a].p+SNACKS[b].p});
+    for(let a=0;a<SN.length;a++)for(let b=a+1;b<SN.length;b++){
+      cands.push({s1:SN[a].id,s2:SN[b].id,key:SN[a].id+"|"+SN[b].id,
+        diff:Math.abs(SN[a].k+SN[b].k-want),pp:SN[a].p+SN[b].p});
     }
     // closest to budget first; among near-equal fits, prefer more protein
     cands.sort((x,y)=>(x.diff-y.diff)||(y.pp-x.pp));
@@ -796,8 +839,9 @@ function renderFuel(){
       const left=c.target-t.k;
       const gap=4-t.n;
       const extra=gap?` — ${gap} slot${gap>1?"s":""} still empty`:"";
+      const dWord=left>800?"dinner & extras":"dinner";
       dinner=left>0
-        ?`<div class="dinnerline ${!gap&&left<400?"tight":""}">Leaves ~${left.toLocaleString()} kcal for dinner${!gap&&left<400?" — a light one":""}${extra}</div>`
+        ?`<div class="dinnerline ${!gap&&left<400?"tight":""}">Leaves ~${left.toLocaleString()} kcal for ${dWord}${!gap&&left<400?" — a light one":""}${extra}</div>`
         :`<div class="dinnerline tight">~${Math.abs(left).toLocaleString()} kcal over the daily target before dinner${extra}</div>`;
     }
     cards+=`<article class="day ${i===todayIdx?"today":""}">
@@ -844,7 +888,7 @@ function renderFuel(){
     <p class="weeknote">Totals cover breakfast, lunch and snacks only — a normal dinner on top takes you toward the ~1.6 g protein per kg bodyweight daily target. The ▶ buttons open YouTube recipe searches.</p>
     <h2 class="section">All options</h2>
     <p class="section-sub">Tap any slot above to pick from these; “Build” shuffles them for you.</p>
-    ${lib("Breakfasts",BREAKFASTS)}${lib("Lunches",LUNCHES)}${lib("Snacks",SNACKS)}
+    ${lib("Breakfasts",forProfile(BREAKFASTS))}${lib("Lunches",forProfile(LUNCHES))}${lib("Snacks",forProfile(SNACKS))}
   `;
   bindWeekbar(v,"fuel");
   const gs=document.getElementById("goto-set");if(gs)gs.onclick=()=>setTab("set");
@@ -857,7 +901,7 @@ function renderFuel(){
   });
 }
 function openMealPicker(di,key){
-  const listMap={b:BREAKFASTS,l:LUNCHES,s1:SNACKS,s2:SNACKS};
+  const listMap={b:forProfile(BREAKFASTS),l:forProfile(LUNCHES),s1:forProfile(SNACKS),s2:forProfile(SNACKS)};
   const labelMap={b:"breakfast",l:"lunch",s1:"snack",s2:"snack"};
   const cur=state.meals[state.week][di][key];
   openSheet(`Choose ${labelMap[key]} — ${DAYS[di]}, Week ${state.week+1}`,
@@ -963,19 +1007,26 @@ function renderTrain(){
   DAYS.forEach((day,i)=>{
     const sid=state.training[state.week][i];const s=sid?SESSIONS[sid]:null;
     const open=expandedTrain===i&&s;
-    cards+=`<article class="day ${i===todayIdx?"today":""}">
+    cards+=`<article class="day ${i===todayIdx?"today":""}" data-di="${i}">
       <div class="dayhead">
+        <button class="draghandle" data-di="${i}" aria-label="Drag to move ${day}'s session">
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><circle cx="4" cy="3" r="1.6"/><circle cx="10" cy="3" r="1.6"/><circle cx="4" cy="8" r="1.6"/><circle cx="10" cy="8" r="1.6"/><circle cx="4" cy="13" r="1.6"/><circle cx="10" cy="13" r="1.6"/></svg>
+        </button>
         <span class="dayname">${day}${i===todayIdx?'<span class="todaytag">Today</span>':""}</span>
         ${s?`<span class="kind ${s.kind}">${s.kindLabel}</span>`:""}
       </div>
       <div class="sessrow">
         <button class="sessname" data-day="${i}" ${s?"":"disabled"} aria-expanded="${open?"true":"false"}">
-          <span class="nm ${s?"":"empty"}">${s?esc(s.name):"Nothing planned — tap Choose"}</span>
+          <span class="nm ${s?"":"empty"}">${s?esc(sName(sid)):"Nothing planned — tap Choose"}</span>
           ${s?`<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="transform:rotate(${open?90:0}deg)"><path d="m9 6 6 6-6 6"/></svg>`:""}
         </button>
         <button class="swap" data-day="${i}">${s?"Swap":"Choose"}</button>
       </div>
-      ${open?`<div class="detail">${detailHTML(sid)}</div>`:""}
+      ${open?`<div class="detail">
+        <div class="renamerow">
+          <button class="swap" data-rn="${sid}">✎ Rename workout</button>
+          ${state.names[sid]?`<button class="swap" data-rr="${sid}">Reset name</button>`:""}
+        </div>${detailHTML(sid)}</div>`:""}
     </article>`;
   });
   v.innerHTML=`
@@ -1002,14 +1053,62 @@ function renderTrain(){
   v.querySelectorAll(".sessname").forEach(el=>{
     el.onclick=()=>{const i=+el.dataset.day;expandedTrain=expandedTrain===i?null:i;renderTrain();};
   });
-  v.querySelectorAll(".swap").forEach(el=>{
+  v.querySelectorAll(".swap[data-day]").forEach(el=>{
     el.onclick=()=>openTrainPicker(+el.dataset.day);
+  });
+  v.querySelectorAll("[data-rn]").forEach(el=>{
+    el.onclick=()=>renameSession(el.dataset.rn);
+  });
+  v.querySelectorAll("[data-rr]").forEach(el=>{
+    el.onclick=()=>{delete state.names[el.dataset.rr];save();renderTrain();};
+  });
+  // drag a day card by its handle onto another day to swap the two sessions
+  v.querySelectorAll(".draghandle").forEach(h=>{
+    h.onpointerdown=e=>{
+      e.preventDefault();
+      const from=+h.dataset.di;
+      const src=v.querySelector(`.day[data-di="${from}"]`);
+      let over=null;
+      src.classList.add("dragsrc");
+      try{h.setPointerCapture(e.pointerId);}catch(err){}
+      const move=ev=>{
+        const el=document.elementFromPoint(ev.clientX,ev.clientY);
+        const card=el&&el.closest?el.closest(".day[data-di]"):null;
+        if(over&&over!==card)over.classList.remove("droptarget");
+        over=(card&&card!==src)?card:null;
+        if(over)over.classList.add("droptarget");
+      };
+      const up=ev=>{
+        h.removeEventListener("pointermove",move);
+        h.removeEventListener("pointerup",up);
+        h.removeEventListener("pointercancel",up);
+        src.classList.remove("dragsrc");
+        if(over){const to=+over.dataset.di;over.classList.remove("droptarget");swapTrainDays(from,to);}
+      };
+      h.addEventListener("pointermove",move);
+      h.addEventListener("pointerup",up);
+      h.addEventListener("pointercancel",up);
+    };
+  });
+}
+function swapTrainDays(a,b){
+  if(a===b)return;
+  const t=state.training[state.week];
+  [t[a],t[b]]=[t[b],t[a]];
+  expandedTrain=null;save();renderTrain();
+}
+function renameSession(sid){
+  if(!SESSIONS[sid])return;
+  askInput("Rename workout",sName(sid),v=>{
+    if(!v||v===SESSIONS[sid].name)delete state.names[sid];
+    else state.names[sid]=v.slice(0,40);
+    save();renderTrain();
   });
 }
 function openTrainPicker(di){
   const cur=state.training[state.week][di];
   openSheet(`Choose session — ${DAYS[di]}, Week ${state.week+1}`,
-    prof().order.map(id=>({id,label:SESSIONS[id].name,meta:SESSIONS[id].kindLabel,sel:id===cur})),
+    prof().order.map(id=>({id,label:sName(id),meta:SESSIONS[id].kindLabel,sel:id===cur})),
     id=>{state.training[state.week][di]=id;expandedTrain=null;save();renderTrain();},
     !!cur,
     ()=>{state.training[state.week][di]=null;if(expandedTrain===di)expandedTrain=null;save();renderTrain();});
@@ -1119,6 +1218,7 @@ function calcOutHTML(){
   return `<div class="targets" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.join("")}</div>
     <p class="setnote">Dinner reserve: <b>~${c.dinner.toLocaleString()} kcal</b>${state.settings.dinner>0?" (your setting)":" (auto — 35% of the daily target)"} → leaving <b>~${c.budget.toLocaleString()} kcal</b> for breakfast, lunch and snacks. “Build week” on the Meals tab picks days to fit that.</p>
     ${c.budget<970?`<p class="setnote" style="color:var(--amber)">The lightest possible day here (smallest breakfast + lunch + 2 snacks) is ~970 kcal, so a ~${c.budget.toLocaleString()} kcal budget will always show days as over. Lower the dinner reserve or raise the daily target.</p>`:""}
+    ${c.budget>MEAL_MAX?`<p class="setnote" style="color:var(--amber)">One breakfast + lunch + 2 snacks tops out around ~${MEAL_MAX.toLocaleString()} kcal, so ~${(c.budget-MEAL_MAX).toLocaleString()} kcal of this budget can't be planned here — it lands in dinner &amp; extras (bigger portions, an extra snack, milk in coffees). Raise the dinner reserve to make the numbers honest.</p>`:""}
     ${c.manual&&c.maint?`<p class="setnote">For reference, estimated maintenance from your details is ~${c.maint.toLocaleString()} kcal — a target of ${c.target.toLocaleString()} is ${c.target<c.maint?`~${(c.maint-c.target).toLocaleString()} kcal below it${c.maint-c.target>500?" — that's a big deficit; the plan recommends 200–350":""}`:"at or above it"}.</p>`:""}
     ${!c.protein?`<p class="setnote">Add your weight and you'll get a protein target too.</p>`:""}`;
 }
@@ -1232,6 +1332,31 @@ function openSheet(title,items,onPick,showClear,onClear){
   });
   const first=root.querySelector(".opt.sel")||root.querySelector(".opt");
   if(first)first.focus();
+}
+/* In-app text input — window.prompt() is blocked in sandboxed pages, never use it */
+function askInput(title,initial,onSave){
+  const root=document.getElementById("sheet-root");
+  root.innerHTML=`<div class="sheet-backdrop" id="ib">
+    <div class="sheet confirm" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="grab"></div>
+      <h3>${esc(title)}</h3>
+      <div class="inputrow"><input id="i-text" type="text" maxlength="40" value="${esc(initial)}"></div>
+      <div class="confirmrow">
+        <button class="btn ghost" id="i-no">Cancel</button>
+        <button class="btn" id="i-yes">Save</button>
+      </div>
+    </div></div>`;
+  lockScroll(true);
+  const close=()=>{root.innerHTML="";lockScroll(false);document.removeEventListener("keydown",onKey);};
+  const submit=()=>{const el=document.getElementById("i-text");const v=el?el.value.trim():"";close();onSave(v);};
+  const onKey=e=>{if(e.key==="Escape")close();if(e.key==="Enter")submit();};
+  document.addEventListener("keydown",onKey);
+  const bd=document.getElementById("ib");
+  bd.onclick=e=>{if(e.target===bd)close();};
+  document.getElementById("i-no").onclick=close;
+  document.getElementById("i-yes").onclick=submit;
+  const inp=document.getElementById("i-text");
+  inp.focus();if(inp.select)inp.select();
 }
 /* In-app confirm — window.confirm() is blocked in sandboxed pages, never use it */
 function askConfirm(msg,yesLabel,onYes){
