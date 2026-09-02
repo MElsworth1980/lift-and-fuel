@@ -398,7 +398,7 @@ details.lib[open]>summary .caret{transform:rotate(90deg)}
 "use strict";
 /* ---------------- data: meals ---------------- */
 const BREAKFASTS=[
- {id:"b1",name:"Skyr or Greek yoghurt + berries + seeds + granola",p:30,k:350,d:"200 g skyr/Greek yoghurt + ½ cup berries + 2 tbsp seeds + ¼ cup granola"},
+ {id:"b1",name:"Greek yoghurt + berries + seeds + granola",p:30,k:350,d:"200 g Greek yoghurt + ½ cup berries + 2 tbsp seeds + ¼ cup granola"},
  {id:"b2",name:"Cottage cheese on wholegrain toast + 2 boiled eggs",p:32,k:400,d:"½ cup (125 g) cottage cheese on 1 slice toast + 2 boiled eggs"},
  {id:"b3",name:"Overnight oats with milk + scoop of protein powder",p:35,k:400,d:"½ cup oats + 1 cup milk + 1 scoop powder, fridge overnight"},
  {id:"b4",name:"3-egg scramble or omelette with cheese",p:28,k:350,d:"3 eggs + 30 g grated cheese"},
@@ -414,9 +414,9 @@ const LUNCHES=[
  {id:"l1",name:"Chicken + salad wholegrain wrap (batch-cooked or rotisserie)",p:35,k:450,d:"1 wrap + 100–120 g cooked chicken + big handful of salad"},
  {id:"l2",name:"Shredded chicken + brown rice or couscous + veg bowl",p:35,k:450,d:"120 g chicken + ½–¾ microwave rice pouch + 1 cup veg"},
  {id:"l3",name:"Big salad + chickpeas + feta + 2 boiled eggs",p:28,k:420,d:"2 cups salad + ½ can chickpeas + 30 g feta + 2 eggs"},
- {id:"l4",name:"Cottage cheese + wholegrain crackers + boiled eggs + veg sticks",p:32,k:380,d:"½ cup cottage cheese + 6 crackers + 2 eggs + veg sticks"},
+ {id:"l4",name:"Cottage cheese + wholegrain crackers + boiled eggs + veg sticks",p:32,k:380,hers:true,d:"½ cup cottage cheese + 6 crackers + 2 eggs + veg sticks"},
  {id:"l5",name:"Leftover-dinner protein bowl (extra meat + salad)",p:35,k:450,d:"~120 g of last night's meat + salad or leftover veg"},
- {id:"l6",name:"Greek-yoghurt bento — yoghurt, nuts, fruit, cheese, turkey slices",p:30,k:420,d:"170 g yoghurt + small handful nuts + fruit + 30 g cheese + 3 slices turkey"},
+ {id:"l6",name:"Greek-yoghurt bento — yoghurt, nuts, fruit, cheese, turkey slices",p:30,k:420,hers:true,d:"170 g yoghurt + small handful nuts + fruit + 30 g cheese + 3 slices turkey"},
  {id:"l7",name:"Wholegrain wrap + hummus + grilled chicken + salad",p:33,k:450,d:"1 wrap + 2 tbsp hummus + 100 g chicken + salad"},
  {id:"l8",name:"Cheese & ham toastie + side salad + high-protein yoghurt",p:32,k:470,d:"2 slices bread + 2 slices ham + 1 slice cheese + side salad + 1 yoghurt pottle"},
  {id:"l9",name:"Pesto chicken pasta salad with veg",p:32,k:450,d:"1½ cups cooked pasta + 100 g chicken + 1 tbsp pesto + veg"},
@@ -424,9 +424,17 @@ const LUNCHES=[
  {id:"l11",name:"Tuna + brown rice or couscous pouch + veg",p:35,k:450,fish:true,d:"1 large tin (185 g) tuna + ½–¾ rice pouch + 1 cup veg"},
  {id:"l12",name:"Ham, cheese & salad sandwich + a boiled egg",p:30,k:450,d:"2 slices bread + 2 slices ham + 1 slice cheese + salad + 1 egg"},
  {id:"l13",name:"Microwave jacket potato + chilli beans + cheese",p:25,k:450,d:"1 large potato (microwave ~8 min) + ½ can chilli beans + 30 g cheese"},
+ {id:"l14",name:"Chicken & bacon caesar wrap",p:38,k:520,d:"1 large wrap + 100 g chicken + 2 rashers bacon + cos + caesar dressing + parmesan"},
+ {id:"l15",name:"Beef nachos bowl — mince, corn chips, cheese & salsa",p:33,k:550,d:"150 g savoury mince + handful corn chips + 30 g cheese + salsa + dollop of yoghurt"},
+ {id:"l16",name:"Butter chicken & rice (ready-meal or leftovers)",p:35,k:550,d:"1 supermarket ready-meal (~400 g) or a leftover portion"},
+ {id:"l17",name:"Chunky soup + ham & cheese toastie",p:28,k:500,d:"1 can/pouch chunky chicken or veg soup + toastie with 1 slice ham + 1 slice cheese"},
+ {id:"l18",name:"BLT on toast + a boiled egg",p:28,k:520,d:"2 slices toast + 3 rashers bacon + lettuce, tomato & mayo + 1 egg"},
+ {id:"l19",name:"Store-bought chicken sushi + a boiled egg",p:26,k:450,d:"8 pieces chicken/teriyaki sushi + 1 egg"},
+ {id:"l20",name:"Chicken katsu or teriyaki rice bowl",p:32,k:520,d:"1 supermarket chiller bowl, or 120 g chicken + ½ rice pouch + teriyaki sauce"},
+ {id:"l21",name:"Hot-smoked salmon rice bowl",p:30,k:520,fish:true,d:"100 g hot-smoked salmon + ½ rice pouch + cucumber + mayo/sriracha"},
 ];
 const SNACKS=[
- {id:"s1",name:"High-protein yoghurt / skyr pottle",p:17,k:120,pd:"15–20",d:"1 pottle (150–170 g)"},
+ {id:"s1",name:"High-protein yoghurt pottle",p:17,k:120,pd:"15–20",d:"1 pottle (150–170 g)"},
  {id:"s2",name:"Cottage cheese + fruit",p:14,k:150,d:"½ cup cottage cheese + 1 piece of fruit"},
  {id:"s3",name:"2 boiled eggs",p:12,k:140,d:"2 eggs"},
  {id:"s4",name:"Beef jerky / biltong (small pack)",p:15,k:120,d:"1 small pack (~25–30 g)"},
@@ -440,8 +448,9 @@ const SNACKS=[
  {id:"s12",name:"Peanut butter on rice cakes + glass of milk",p:14,k:250,d:"2 rice cakes + 1 tbsp PB + 1 cup milk"},
 ];
 const MEAL_BY_ID={};[...BREAKFASTS,...LUNCHES,...SNACKS].forEach(m=>MEAL_BY_ID[m.id]=m);
-/* she won't eat fish — tuna/salmon options only show on his profile */
-const forProfile=list=>state.profile==="her"?list.filter(m=>!m.fish):list;
+/* she won't eat fish — tuna/salmon options only show on his profile;
+   a few lighter "hers" options are hidden from his lists */
+const forProfile=list=>state.profile==="her"?list.filter(m=>!m.fish):list.filter(m=>!m.hers);
 
 /* ---------------- YouTube search links ---------------- */
 const ytURL=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
